@@ -37,6 +37,7 @@ VVE Statenjacht en schrijft meestal Nederlands. Antwoord in het Nederlands, kort
 
 ## Database (public)
 - `profiles` (id, email, naam, rol 'admin'|'lezer', appartement). Nieuwe gebruiker krijgt automatisch rol 'lezer'.
+  Rol wijzigen: tabblad Bewoners → kolom Rol (eigen rol niet; laatste beheerder beschermd door trigger).
 - `onderdelen`, `plan` (id=1), `historie` – MJOP; schrijven alleen via RPC `opslaan()` (alleen admin).
 - `mededelingen`, `agenda`, `contacten` (groep 'bestuur'|'tc'|'contact', `commissie` = Femur/Technische commissie/Kascommissie/Overige).
 - `stemmingen` (titel, toelichting, opties jsonb, sluit) en `stemmen` (pk stemming_id+appartement).

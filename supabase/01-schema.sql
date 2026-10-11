@@ -141,3 +141,6 @@ grant  execute on function public.opslaan(jsonb, text[], jsonb, text, text, json
 revoke execute on function public.handle_new_user() from public, anon, authenticated;
 revoke execute on function public.is_admin() from public, anon;
 grant  execute on function public.is_admin() to authenticated;
+
+-- 11 oktober 2026, migratie 'laatste_beheerder_beschermen': trigger profiles_laatste_beheerder voorkomt dat de
+-- laatste beheerder (rol 'admin') wordt teruggezet. Rol wijzigen gaat via het tabblad Bewoners (kolom Rol).

@@ -263,6 +263,7 @@ dialog h2{font-size:22px}
 .res-table td.mail{overflow-wrap:anywhere;color:var(--muted);font-size:14px}
 .res-table input{padding:7px 10px}
 .res-table .app{max-width:110px}
+.res-table select{padding:7px 10px;width:auto}
 .saved{font-size:13px;color:var(--pos)}
 @media (max-width:640px){.res-table thead{display:none}.res-table tr{display:grid;grid-template-columns:1fr 110px;gap:6px 10px;padding:12px 0;border-bottom:1px solid var(--line)}.res-table td{border:0;padding:0}.res-table td.mail{grid-column:1/-1}}
 footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;color:var(--muted);font-size:14px;border-top:1px solid var(--line)}
@@ -584,7 +585,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     if (needPassword){ showPwCard(linkType==='recovery' ? 'Nieuw wachtwoord' : 'Welkom! Kies je wachtwoord', false); return; }
     if (state.started) return; state.started=true;
     $('login').hidden=true; $('app').hidden=false;
-    $('who').textContent = session.user.email;
+    $('who').textContent = session.user.email; myId = session.user.id;
     const h = new Date().getHours();
     $('greeting').textContent = h<6 ? 'Goedenacht' : h<12 ? 'Goedemorgen' : h<18 ? 'Goedemiddag' : 'Goedenavond';
     const { data:prof } = await sb.from('profiles').select('rol,naam,appartement').eq('id', session.user.id).maybeSingle();
@@ -1011,23 +1012,33 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
   };
 
   // ---------- Bewoners (beheerder) ----------
+  let myId = null;
   function renderResidents(){
     const list = [...state.residents].sort((a,b)=>String(a.appartement||'~').localeCompare(String(b.appartement||'~'),'nl',{numeric:true}) || String(a.email).localeCompare(String(b.email)));
     const linked = new Set(list.map(r=>(r.appartement||'').trim()).filter(Boolean)).size;
     const missing = list.filter(r=>!(r.appartement||'').trim()).length;
     $('residents').innerHTML = `<p class="turnout" style="margin:14px 0 4px">${list.length} account${list.length==1?'':'s'} · ${linked} appartement${linked==1?'':'en'} gekoppeld${missing?` · <strong>${missing} nog zonder appartement</strong>`:''}. Nieuwe bewoners nodig je uit via Supabase (Authentication → Users → Invite user).</p>
-      <table class="res-table"><thead><tr><th>E-mailadres</th><th>Naam</th><th>Appartement</th><th></th></tr></thead><tbody>${list.map(r=>`
-        <tr data-res="${r.id}"><td class="mail">${esc(r.email)}${r.rol==='admin'?' <span class="pin">Beheerder</span>':''}</td>
+      <table class="res-table"><thead><tr><th>E-mailadres</th><th>Naam</th><th>Appartement</th><th>Rol</th><th></th></tr></thead><tbody>${list.map(r=>`
+        <tr data-res="${r.id}"><td class="mail">${esc(r.email)}</td>
           <td><input class="naam" value="${esc(r.naam||'')}" maxlength="80" aria-label="Naam van ${esc(r.email)}"></td>
           <td><input class="app" value="${esc(r.appartement||'')}" maxlength="20" placeholder="nr." aria-label="Appartement van ${esc(r.email)}"></td>
-          <td><span class="saved" hidden>Opgeslagen</span></td></tr>`).join('')}</tbody></table>`;
+          <td><select class="rol" aria-label="Rol van ${esc(r.email)}" ${r.id===myId?'disabled title="Je eigen rol kun je niet wijzigen"':''}><option value="lezer" ${r.rol!=='admin'?'selected':''}>Bewoner</option><option value="admin" ${r.rol==='admin'?'selected':''}>Beheerder</option></select></td>
+          <td><span class="saved" hidden>Opgeslagen</span></td></tr>`).join('')}</tbody></table>
+      <p class="small-print" style="margin-top:12px">Een beheerder kan alles op de site aanpassen: mededelingen, agenda, stemmingen, documenten, personen, het MJOP en deze lijst. Maak alleen bestuursleden beheerder.</p>`;
   }
   $('residents').addEventListener('change', async e=>{
     const tr = e.target.closest('tr[data-res]'); if (!tr) return;
     const row = { naam: tr.querySelector('.naam').value.trim()||null, appartement: tr.querySelector('.app').value.trim()||null };
-    const ok = tr.querySelector('.saved');
+    const ok = tr.querySelector('.saved'), sel = tr.querySelector('.rol'), r0 = state.residents.find(x=>x.id===tr.dataset.res);
+    if (e.target===sel){
+      const wie = r0?.naam || r0?.email || 'Dit account';
+      const msg = sel.value==='admin' ? `${wie} beheerder maken?\n\nDeze persoon kan dan alles op de site aanpassen.` : `${wie} weer gewone bewoner maken?\n\nDeze persoon kan dan niets meer aanpassen.`;
+      if (!confirm(msg)){ sel.value = r0?.rol==='admin' ? 'admin' : 'lezer'; return; }
+      row.rol = sel.value;
+    }
     const { error } = await sb.from('profiles').update(row).eq('id', tr.dataset.res);
-    ok.hidden=false; ok.textContent = error ? 'Opslaan mislukt' : 'Opgeslagen'; ok.style.color = error ? 'var(--neg)' : '';
+    ok.hidden=false; ok.textContent = error ? (/minstens/i.test(error.message) ? 'Er moet minstens één beheerder blijven' : 'Opslaan mislukt') : 'Opgeslagen'; ok.style.color = error ? 'var(--neg)' : '';
+    if (error && row.rol){ sel.value = r0?.rol==='admin' ? 'admin' : 'lezer'; }
     if (!error){ const r = state.residents.find(x=>x.id===tr.dataset.res); Object.assign(r,row);
       const { data:{ session } } = await sb.auth.getSession();
       if (session && tr.dataset.res===session.user.id){ state.myApp = row.appartement; renderPolls(); } }
