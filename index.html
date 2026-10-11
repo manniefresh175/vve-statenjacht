@@ -470,7 +470,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
   <form id="contactForm" method="dialog">
     <h2 id="contactDlgTitle">Persoon toevoegen</h2>
     <div class="field"><label for="cGroep">Hoort bij</label>
-      <select id="cGroep"><option value="bestuur">Bestuur</option><option value="tc:Technische commissie">Technische commissie</option><option value="tc:Kascommissie">Kascommissie</option><option value="tc:Overige">Overige</option></select></div>
+      <select id="cGroep"><option value="bestuur">Bestuur</option><option value="tc:Beheerder">Beheerder</option><option value="tc:Technische commissie">Technische commissie</option><option value="tc:Kascommissie">Kascommissie</option><option value="tc:Overige">Overige</option></select></div>
     <div class="field"><label for="cNaam" id="cNaamLabel">Naam</label><input id="cNaam" required maxlength="120"></div>
     <div class="field"><label for="cFunctie" id="cFunctieLabel">Functie</label><input id="cFunctie" maxlength="120"></div>
     <div class="row2">
@@ -643,10 +643,10 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
   const telHref = t => 'tel:' + String(t).replace(/[^\d+]/g,'');
   const reach = c => `<div class="reach">${c.telefoon?`<a href="${telHref(c.telefoon)}">${esc(c.telefoon)}</a>`:''}${c.email?`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`:''}</div>`;
   const editBtn = c => state.isAdmin ? `<div class="admin-row"><button class="btn quiet small" data-edit-contact="${c.id}">Wijzigen</button></div>` : '';
-  const COMMISSIES = ['Technische commissie','Kascommissie','Overige'];
+  const COMMISSIES = ['Beheerder','Technische commissie','Kascommissie','Overige'];
   const commName = c => (c.commissie||'').trim() || 'Technische commissie';
   function renderContacts(){
-    // Vaste volgorde: Bestuur, Technische commissie, Kascommissie
+    // Vaste volgorde: Bestuur, Beheerder, Technische commissie, Kascommissie, Overige
     const groups = [['bestuur','Bestuur', c=>c.groep==='bestuur'], ...COMMISSIES.map(n=>['tc', n, c=>c.groep==='tc' && commName(c)===n])];
     $('board').innerHTML = groups.map(([g,label,match])=>{
       const list = state.contacts.filter(match);
@@ -659,10 +659,10 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
 
   let editingContact=null, delArmedC=false;
   function syncContactLabels(){
-    const ext = $('cGroep').value==='contact';
+    const ext = $('cGroep').value==='tc:Beheerder';
     $('cNaamLabel').textContent = ext ? 'Naam of organisatie' : 'Naam';
-    $('cFunctieLabel').textContent = ext ? 'Waarvoor' : 'Functie';
-    $('cFunctie').placeholder = ext ? 'Bijvoorbeeld: Storingen lift' : 'Bijvoorbeeld: Voorzitter';
+    $('cFunctieLabel').textContent = ext ? 'Rol of contactpersoon' : 'Functie';
+    $('cFunctie').placeholder = ext ? 'Bijvoorbeeld: VvE-beheerder, contactpersoon Jan Jansen' : 'Bijvoorbeeld: Voorzitter';
   }
   function openContact(c, groep){
     editingContact=c||null; delArmedC=false;
