@@ -27,7 +27,7 @@ VVE Statenjacht en schrijft meestal Nederlands. Antwoord in het Nederlands, kort
 ## Bestanden
 - `index.html` – inlogscherm + portaal met tabbladen (hash-routing):
   `#overzicht` (foto bovenaan, sectie Lopende stemming alleen als er iets open is, laatste mededelingen, binnenkort),
-  `#mededelingen`, `#agenda`, `#stemmingen`, `#documenten` (beheerder uploadt, ingelogden openen), `#bestuur` (Bestuur / Beheerder / Technische commissie / Kascommissie / Overige),
+  `#mededelingen`, `#agenda`, `#stemmingen`, `#documenten` (beheerder uploadt, ingelogden openen), `#bestuur` (Bestuur / Femur / Technische commissie / Kascommissie / Overige),
   `#contact` (bewoners sturen bericht aan bestuur, alleen tekst; beheerder ziet alles, zet status en antwoordt;
   tabel `feedback`). Het tabblad Contactpersonen is op 11-10-2026 verwijderd.
   `#bewoners` (alleen beheerder), en de tab MJOP → `mjop.html`.
@@ -38,7 +38,7 @@ VVE Statenjacht en schrijft meestal Nederlands. Antwoord in het Nederlands, kort
 ## Database (public)
 - `profiles` (id, email, naam, rol 'admin'|'lezer', appartement). Nieuwe gebruiker krijgt automatisch rol 'lezer'.
 - `onderdelen`, `plan` (id=1), `historie` – MJOP; schrijven alleen via RPC `opslaan()` (alleen admin).
-- `mededelingen`, `agenda`, `contacten` (groep 'bestuur'|'tc'|'contact', `commissie` = Beheerder/Technische commissie/Kascommissie/Overige).
+- `mededelingen`, `agenda`, `contacten` (groep 'bestuur'|'tc'|'contact', `commissie` = Femur/Technische commissie/Kascommissie/Overige).
 - `stemmingen` (titel, toelichting, opties jsonb, sluit) en `stemmen` (pk stemming_id+appartement).
   Eén stem per appartement, openbaar na sluiting (RLS), stemmen alleen via RPC `stem()`; opkomst via `stem_opkomst()`.
 - `feedback` (bericht, onderwerp ongebruikt/default 'Overig', status nieuw/in behandeling/afgehandeld, antwoord); afzender via trigger uit profiel.
