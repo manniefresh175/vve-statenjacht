@@ -537,7 +537,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const eur = new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',maximumFractionDigits:0});
-  const state = { isAdmin:false, naam:'', news:[], events:[], contacts:[], polls:[], votes:[], turnout:{}, residents:[], docs:[], groupOrder:[], feedback:[], fbFilter:'open', myApp:null, started:false };
+  const state = { isAdmin:false, naam:'', news:[], events:[], contacts:[], polls:[], votes:[], turnout:{}, residents:[], docs:[], rol:'lezer', groupOrder:[], feedback:[], fbFilter:'open', myApp:null, started:false };
 
   // ---------- Supabase ----------
   const SUPABASE_URL = 'https://tnqjubjtsdwulwjbbhfp.supabase.co';
@@ -606,8 +606,9 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     state.isAdmin = prof?.rol === 'admin';
     const rol = prof?.rol || 'lezer';
     $('role').textContent = ROL_NAAM[rol] || 'Bewoner';
-    $('tabMjop').hidden = !(rol==='admin' || rol==='tc');
-    state.myApp = (prof?.appartement||'').trim() || null;
+    state.rol = rol;
+    $('tabMjop').hidden = !['admin','tc','gast'].includes(rol);
+    state.myApp = prof?.rol==='gast' ? null : ((prof?.appartement||'').trim() || null);   // gasten stemmen niet
     $('addNews').hidden = $('addEvent').hidden = $('addPerson').hidden = $('addPoll').hidden = $('addDoc').hidden = $('orderGroups').hidden = $('tabBewoners').hidden = !state.isAdmin;
     showTab(hashTab());
     loadAll();
@@ -924,6 +925,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
   }
   function renderPolls(){
     $('noApp').hidden = !!state.myApp || !state.polls.some(isOpen);
+    $('noApp').textContent = state.rol==='gast' ? 'Je bent ingelogd als gast. Je kunt de stemmingen bekijken, maar alleen bewoners kunnen stemmen.' : 'Je account is nog niet gekoppeld aan een appartement, daarom kun je nog niet stemmen. Vraag het bestuur om dit in te stellen.';
     const open = state.polls.filter(isOpen).sort((a,b)=>new Date(a.sluit)-new Date(b.sluit));
     const closed = state.polls.filter(p=>!isOpen(p)).sort((a,b)=>new Date(b.sluit)-new Date(a.sluit));
     const list = [...open, ...closed];
@@ -961,7 +963,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
   function pollCardHTML(p){
     const mine = myVote(p);
     let line, btn;
-    if (!state.myApp){ line = 'Je account is nog niet aan een appartement gekoppeld, daarom kun je nog niet stemmen.'; btn = '<span class="btn">Bekijk stemming</span>'; }
+    if (!state.myApp){ line = state.rol==='gast' ? 'Als gast kun je de stemming bekijken; alleen bewoners stemmen.' : 'Je account is nog niet aan een appartement gekoppeld, daarom kun je nog niet stemmen.'; btn = '<span class="btn">Bekijk stemming</span>'; }
     else if (!mine){ line = `Appartement ${esc(state.myApp)} heeft nog niet gestemd. ${turnoutText(p)}`; btn = '<span class="btn primary">Stem nu</span>'; }
     else { line = `Bedankt voor je stem! Appartement ${esc(state.myApp)} stemde <strong>${esc(mine.optie)}</strong>.`; btn = '<span class="btn">Bekijk stemming</span>'; }
     return `<a class="vote-item" href="#stemmingen/${p.id}"><div><div class="meta"><span class="status open">Open</span><span>${untilText(p.sluit)} · ${dateTime(p.sluit)}</span></div><h3>${esc(p.titel)}</h3><p class="line">${line}</p></div>${btn}</a>`;
@@ -1041,7 +1043,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
 
   // ---------- Bewoners (beheerder) ----------
   let myId = null;
-  const ROL_NAAM = { lezer:'Bewoner', tc:'Technische commissie', admin:'Beheerder' };
+  const ROL_NAAM = { lezer:'Bewoner', gast:'Gast', tc:'Technische commissie', admin:'Beheerder' };
   function renderResidents(){
     const list = [...state.residents].sort((a,b)=>String(a.appartement||'~').localeCompare(String(b.appartement||'~'),'nl',{numeric:true}) || String(a.email).localeCompare(String(b.email)));
     const linked = new Set(list.map(r=>(r.appartement||'').trim()).filter(Boolean)).size;
@@ -1053,7 +1055,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
           <td><input class="app" value="${esc(r.appartement||'')}" maxlength="20" placeholder="nr." aria-label="Appartement van ${esc(r.email)}"></td>
           <td><select class="rol" aria-label="Rol van ${esc(r.email)}" ${r.id===myId?'disabled title="Je eigen rol kun je niet wijzigen"':''}>${Object.entries(ROL_NAAM).map(([v,t])=>`<option value="${v}" ${(r.rol||'lezer')===v?'selected':''}>${t}</option>`).join('')}</select></td>
           <td><span class="saved" hidden>Opgeslagen</span></td></tr>`).join('')}</tbody></table>
-      <p class="small-print" style="margin-top:12px">Beheerder: kan alles op de site aanpassen; alleen voor het bestuur. Technische commissie: kan daarnaast het MJOP bekijken en wijzigen. Bewoner: kan alles lezen behalve het MJOP.</p>`;
+      <p class="small-print" style="margin-top:12px">Beheerder: kan alles op de site aanpassen; alleen voor het bestuur. Technische commissie: kan daarnaast het MJOP bekijken en wijzigen. Bewoner: kan alles lezen behalve het MJOP, en stemmen. Gast (niet-bewoner): kan alles lezen, ook het MJOP, maar niets aanpassen en niet stemmen.</p>`;
   }
   $('residents').addEventListener('change', async e=>{
     const tr = e.target.closest('tr[data-res]'); if (!tr) return;
@@ -1061,7 +1063,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     const ok = tr.querySelector('.saved'), sel = tr.querySelector('.rol'), r0 = state.residents.find(x=>x.id===tr.dataset.res);
     if (e.target===sel){
       const wie = r0?.naam || r0?.email || 'Dit account';
-      const uitleg = { admin:'kan dan alles op de site aanpassen.', tc:'kan dan het MJOP bekijken en wijzigen. Verder is het een gewone bewoner.', lezer:'kan dan alles lezen behalve het MJOP, en niets aanpassen.' };
+      const uitleg = { admin:'kan dan alles op de site aanpassen.', tc:'kan dan het MJOP bekijken en wijzigen. Verder is het een gewone bewoner.', lezer:'kan dan alles lezen behalve het MJOP, en niets aanpassen.', gast:'kan dan alles lezen, ook het MJOP, maar niets aanpassen en niet stemmen.' };
       const msg = `<strong>${esc(wie)}</strong> ${uitleg[sel.value]}`;
       if (!await ask(`Rol wijzigen naar ${ROL_NAAM[sel.value]}?`, msg, 'Ja, wijzigen')){ sel.value = r0?.rol || 'lezer'; return; }
       row.rol = sel.value;

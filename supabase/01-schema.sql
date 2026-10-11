@@ -149,3 +149,6 @@ grant  execute on function public.is_admin() to authenticated;
 -- profiles.rol mag nu 'admin' | 'tc' | 'lezer' ('tc' = Technische commissie).
 -- Functie mag_mjop() = rol in ('admin','tc'). Lezen van onderdelen/plan/historie alleen als mag_mjop();
 -- opslaan() controleert ook mag_mjop() (bestuur én technische commissie mogen het MJOP wijzigen).
+
+-- 11 oktober 2026, migratie 'rol_gast': rol 'gast' (niet-bewoner). Lezen overal (ook MJOP via mjop_lezen()),
+-- niets wijzigen. mijn_appartement() geeft null voor gasten, dus stem() weigert; stem_opkomst() telt gasten niet mee.

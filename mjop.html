@@ -705,7 +705,7 @@ dialog .field input{width:100%}
     state.items = state.items.filter(x=>x.id!==state.editing.id); $('dlg').close(); render();
   };
   function failWrite(err){
-    const noRights = /beheerder/i.test(err?.message||'');
+    const noRights = /beheerder|technische commissie/i.test(err?.message||'');
     const msg = noRights ? 'Je hebt geen rechten om deze planning te wijzigen.'
       : 'Opslaan lukte niet. Je wijzigingen staan er nog; probeer het zo opnieuw.';
     if (noRights) state.canWrite=false;
@@ -889,13 +889,13 @@ dialog .field input{width:100%}
     if (started) return; started=true;
     const { data:prof } = await sb.from('profiles').select('rol').eq('id', session.user.id).maybeSingle();
     const rol = prof?.rol || 'lezer';
-    // Alleen bestuur (beheerder) en technische commissie hebben toegang tot het MJOP
-    if (rol!=='admin' && rol!=='tc'){ location.replace('/#overzicht'); return; }
+    // Toegang tot het MJOP: bestuur (beheerder), technische commissie en gasten (gasten alleen lezen)
+    if (!['admin','tc','gast'].includes(rol)){ location.replace('/#overzicht'); return; }
     $('login').hidden=true; $('app').hidden=false;
     $('who').textContent = session.user.email;
     state.db = sb; state.userId = session.user.id;
-    state.canWrite = true;   // de database controleert dit nogmaals bij opslaan
-    $('role').textContent = rol==='admin' ? 'Beheerder' : 'Technische commissie';
+    state.canWrite = rol==='admin' || rol==='tc';   // gast leest alleen; de database controleert dit nogmaals bij opslaan
+    $('role').textContent = { admin:'Beheerder', tc:'Technische commissie', gast:'Gast' }[rol];
     $('tabBewoners').hidden = rol!=='admin';
     try{ await loadAll(); }catch(e){ $('status').textContent='De gegevens konden niet geladen worden. Ververs de pagina.'; render(); }
   }
