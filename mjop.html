@@ -294,8 +294,10 @@ dialog .field input{width:100%}
     <a href="/#overzicht">Overzicht</a>
     <a href="/#mededelingen">Mededelingen</a>
     <a href="/#agenda">Agenda</a>
+    <a href="/#stemmingen">Stemmingen</a>
     <a href="/#bestuur">Bestuur en commissies</a>
     <a href="/#contacten">Contactpersonen</a>
+    <a href="/#bewoners" id="tabBewoners" hidden>Bewoners</a>
     <a href="/mjop.html" aria-current="page">MJOP Planner</a>
   </nav>
 </div>
@@ -889,7 +891,8 @@ dialog .field input{width:100%}
     state.db = sb; state.userId = session.user.id;
     const { data:prof } = await sb.from('profiles').select('rol').eq('id', session.user.id).maybeSingle();
     state.canWrite = prof?.rol === 'admin';
-    $('role').textContent = state.canWrite ? 'Beheerder' : 'Alleen lezen';
+    $('role').textContent = state.canWrite ? 'Beheerder' : 'Bewoner';
+    $('tabBewoners').hidden = !state.canWrite;
     try{ await loadAll(); }catch(e){ $('status').textContent='De gegevens konden niet geladen worden. Ververs de pagina.'; render(); }
   }
 

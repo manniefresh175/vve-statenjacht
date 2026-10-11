@@ -167,6 +167,46 @@ dialog h2{font-size:22px}
 .contact .note{grid-column:1/-1;font-size:15px}
 .contact .reach{text-align:right}
 @media (max-width:520px){.person{grid-template-columns:48px minmax(0,1fr)}.person .reach{grid-column:2}.contact{grid-template-columns:1fr}.contact .reach{text-align:left}}
+/* Stemmingen */
+.tab-count{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;margin-left:7px;border-radius:10px;background:var(--frame);color:#fff;font-size:12px;font-family:var(--f-body);font-weight:600}
+.vote-banner{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-top:28px;padding:18px 22px;border-radius:12px;background:var(--surface);border-left:5px solid var(--frame);box-shadow:0 10px 30px -22px rgba(20,25,30,.5);text-decoration:none;color:var(--ink)}
+.vote-banner strong{display:block;font-family:var(--f-display);font-size:19px}
+.vote-banner span{color:var(--muted);font-size:15px}
+.poll{padding:24px 0;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:12px}
+.poll .meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:14px;color:var(--muted)}
+.status{font-size:12px;font-weight:600;border-radius:20px;padding:2px 10px}
+.status.open{color:#fff;background:var(--pos)}
+.status.closed{color:var(--muted);background:color-mix(in srgb,var(--muted) 16%,transparent)}
+.poll h3{font-size:22px;font-weight:700}
+.poll .body{max-width:68ch}
+.choices{display:flex;flex-direction:column;gap:8px;max-width:520px}
+.choice{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;font-weight:500}
+.choice input{width:20px;height:20px;margin:0;accent-color:var(--sky);flex:none}
+.choice:has(input:checked){border-color:var(--sky);box-shadow:0 0 0 1px var(--sky);background:var(--sky-soft)}
+.choice.ro{cursor:default}
+.vote-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.my-vote{font-size:15px;padding:10px 14px;border-radius:8px;background:var(--sky-soft);max-width:620px}
+.turnout{font-size:14px;color:var(--muted)}
+.results{display:flex;flex-direction:column;gap:10px;max-width:620px}
+.res-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;font-size:15px}
+.res-row .bar{grid-column:1/-1;height:10px;border-radius:5px;background:color-mix(in srgb,var(--muted) 18%,transparent);overflow:hidden}
+.res-row .bar i{display:block;height:100%;background:var(--river);border-radius:5px}
+.res-row.win .bar i{background:var(--frame)}
+.res-row.win .lbl{font-weight:700}
+.res-row .n{font-variant-numeric:tabular-nums;color:var(--muted)}
+.voters summary{cursor:pointer;color:var(--sky);font-weight:600;font-size:15px}
+.voters h4{margin:14px 0 4px;font-size:15px}
+.voters ul{margin:0;padding-left:18px;font-size:15px;color:var(--muted)}
+.admin-peek{font-size:14px;color:var(--muted)}
+/* Bewoners */
+.res-table{width:100%;border-collapse:collapse;font-size:15px}
+.res-table th{text-align:left;font-size:13px;color:var(--muted);font-weight:600;padding:12px 8px 8px;border-bottom:1px solid var(--line)}
+.res-table td{padding:8px;border-bottom:1px solid var(--line);vertical-align:middle}
+.res-table td.mail{overflow-wrap:anywhere;color:var(--muted);font-size:14px}
+.res-table input{padding:7px 10px}
+.res-table .app{max-width:110px}
+.saved{font-size:13px;color:var(--pos)}
+@media (max-width:640px){.res-table thead{display:none}.res-table tr{display:grid;grid-template-columns:1fr 110px;gap:6px 10px;padding:12px 0;border-bottom:1px solid var(--line)}.res-table td{border:0;padding:0}.res-table td.mail{grid-column:1/-1}}
 footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;color:var(--muted);font-size:14px;border-top:1px solid var(--line)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -224,8 +264,10 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     <a href="#overzicht" data-tab="overzicht">Overzicht</a>
     <a href="#mededelingen" data-tab="mededelingen">Mededelingen</a>
     <a href="#agenda" data-tab="agenda">Agenda</a>
+    <a href="#stemmingen" data-tab="stemmingen">Stemmingen<span class="tab-count" id="voteDot" hidden></span></a>
     <a href="#bestuur" data-tab="bestuur">Bestuur en commissies</a>
     <a href="#contacten" data-tab="contacten">Contactpersonen</a>
+    <a href="#bewoners" data-tab="bewoners" id="tabBewoners" hidden>Bewoners</a>
     <a href="/mjop.html">MJOP Planner</a>
   </nav>
 
@@ -238,6 +280,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
   </header>
 
   <main>
+    <div id="voteBanner"></div>
     <div class="cols">
       <section aria-labelledby="homeNewsTitle">
         <div class="col-head"><h2 id="homeNewsTitle">Laatste mededelingen</h2><a class="see-all" href="#mededelingen">Alle mededelingen</a></div>
@@ -261,6 +304,19 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
   <main class="page" data-panel="agenda" hidden>
     <div class="page-head"><div><h1>Agenda</h1><p>Vergaderingen, onderhoud en andere afspraken.</p></div><button class="btn small" id="addEvent" hidden>Afspraak toevoegen</button></div>
     <div id="agenda"><p class="empty">Laden…</p></div>
+  </main>
+
+  <!-- Stemmingen -->
+  <main class="page" data-panel="stemmingen" hidden>
+    <div class="page-head"><div><h1>Stemmingen</h1><p>Je stemt namens je appartement; per appartement telt één stem. Na de sluitingsdatum ziet iedereen de uitslag en wie wat heeft gestemd.</p></div><button class="btn small" id="addPoll" hidden>Stemming aanmaken</button></div>
+    <p class="msg" id="noApp" hidden>Je account is nog niet gekoppeld aan een appartement, daarom kun je nog niet stemmen. Vraag het bestuur om dit in te stellen.</p>
+    <div id="polls"><p class="empty">Laden…</p></div>
+  </main>
+
+  <!-- Bewoners (alleen beheerder) -->
+  <main class="page" data-panel="bewoners" hidden>
+    <div class="page-head"><div><h1>Bewoners</h1><p>Alleen zichtbaar voor beheerders. Koppel elk account aan een appartement, anders kan die bewoner niet stemmen. De naam staat bij de uitslag van een stemming.</p></div></div>
+    <div id="residents"><p class="empty">Laden…</p></div>
   </main>
 
   <!-- Bestuur en commissies -->
@@ -316,6 +372,25 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
   </form>
 </dialog>
 
+<!-- Stemming aanmaken / wijzigen -->
+<dialog id="pollDlg">
+  <form id="pollForm" method="dialog">
+    <h2 id="pollDlgTitle">Stemming aanmaken</h2>
+    <div class="field"><label for="pTitel">Vraag of onderwerp</label><input id="pTitel" required maxlength="160" placeholder="Bijvoorbeeld: Welke kleur krijgen de voordeuren?"></div>
+    <div class="field"><label for="pTekst">Toelichting (optioneel)</label><textarea id="pTekst" style="min-height:90px"></textarea></div>
+    <div class="field"><label for="pOpties">Keuzes, één per regel</label><textarea id="pOpties" required style="min-height:110px" placeholder="Voor&#10;Tegen&#10;Onthouding"></textarea><p class="small-print" id="pOptiesHint" hidden>Er is al gestemd, daarom kun je de keuzes niet meer wijzigen.</p></div>
+    <div class="row2">
+      <div class="field"><label for="pDatum">Sluit op</label><input id="pDatum" type="date" required></div>
+      <div class="field"><label for="pTijd">Om</label><input id="pTijd" type="time" required value="20:00"></div>
+    </div>
+    <p class="msg err" id="pollErr" hidden></p>
+    <div class="dlg-actions">
+      <button type="button" class="btn danger" id="pollDel" hidden>Verwijderen</button>
+      <div class="right"><button type="button" class="btn" id="pollCancel">Annuleren</button><button type="submit" class="btn primary" id="pollSave">Opslaan</button></div>
+    </div>
+  </form>
+</dialog>
+
 <!-- Persoon / contact toevoegen of wijzigen -->
 <dialog id="contactDlg">
   <form id="contactForm" method="dialog">
@@ -343,7 +418,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const eur = new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',maximumFractionDigits:0});
-  const state = { isAdmin:false, naam:'', news:[], events:[], contacts:[], started:false };
+  const state = { isAdmin:false, naam:'', news:[], events:[], contacts:[], polls:[], votes:[], turnout:{}, residents:[], myApp:null, started:false };
 
   // ---------- Supabase ----------
   const SUPABASE_URL = 'https://tnqjubjtsdwulwjbbhfp.supabase.co';
@@ -408,20 +483,30 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     $('who').textContent = session.user.email;
     const h = new Date().getHours();
     $('greeting').textContent = h<6 ? 'Goedenacht' : h<12 ? 'Goedemorgen' : h<18 ? 'Goedemiddag' : 'Goedenavond';
-    const { data:prof } = await sb.from('profiles').select('rol,naam').eq('id', session.user.id).maybeSingle();
+    const { data:prof } = await sb.from('profiles').select('rol,naam,appartement').eq('id', session.user.id).maybeSingle();
     state.isAdmin = prof?.rol === 'admin';
     $('role').textContent = state.isAdmin ? 'Beheerder' : 'Bewoner';
-    $('addNews').hidden = $('addEvent').hidden = $('addPerson').hidden = $('addContact').hidden = !state.isAdmin;
+    state.myApp = (prof?.appartement||'').trim() || null;
+    $('addNews').hidden = $('addEvent').hidden = $('addPerson').hidden = $('addContact').hidden = $('addPoll').hidden = $('tabBewoners').hidden = !state.isAdmin;
+    showTab(hashTab());
     loadAll();
   }
   async function loadAll(){
     const today = new Date(); today.setHours(0,0,0,0);
-    const [n,a,c] = await Promise.all([
+    const [n,a,c,ps,vs,to,rs] = await Promise.all([
       sb.from('mededelingen').select('*').order('vastgepind',{ascending:false}).order('geplaatst',{ascending:false}).limit(50),
       sb.from('agenda').select('*').gte('start', today.toISOString()).order('start',{ascending:true}).limit(40),
-      sb.from('contacten').select('*').order('volgorde',{ascending:true}).order('naam',{ascending:true})
+      sb.from('contacten').select('*').order('volgorde',{ascending:true}).order('naam',{ascending:true}),
+      sb.from('stemmingen').select('*'),
+      sb.from('stemmen').select('*'),
+      sb.rpc('stem_opkomst'),
+      state.isAdmin ? sb.from('profiles').select('id,email,naam,appartement,rol') : Promise.resolve({data:[]})
     ]);
-    $('loadErr').hidden = !(n.error || a.error || c.error);
+    $('loadErr').hidden = !(n.error || a.error || c.error || ps.error || vs.error);
+    state.polls = ps.data || []; state.votes = vs.data || [];
+    state.turnout = Object.fromEntries((to.data||[]).map(r=>[r.stemming_id, r]));
+    state.residents = rs.data || [];
+    renderPolls(); if (state.isAdmin) renderResidents();
     state.contacts = c.data || []; renderContacts();
     state.news = n.data || []; state.events = a.data || [];
     renderNews(); renderAgenda();
@@ -612,10 +697,140 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     $('eventDlg').close(); loadAll();
   };
 
+  // ---------- Stemmingen ----------
+  const dateTime = d => new Date(d).toLocaleString('nl-NL',{weekday:'short',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'});
+  const isOpen = p => new Date(p.sluit) > new Date();
+  const myVote = p => state.myApp ? state.votes.find(v=>v.stemming_id===p.id && v.appartement===state.myApp) : null;
+  function untilText(d){
+    const ms = new Date(d) - new Date(), h = Math.round(ms/36e5), days = Math.round(ms/864e5);
+    return h < 1 ? 'sluit binnen een uur' : h < 24 ? `sluit over ${h} uur` : days === 1 ? 'sluit morgen' : `sluit over ${days} dagen`;
+  }
+  function turnoutText(p){
+    const t = state.turnout[p.id]; if (!t) return '';
+    return `${t.gestemd} van ${t.appartementen} appartement${t.appartementen==1?'':'en'} ${t.gestemd==1?'heeft':'hebben'} gestemd.`;
+  }
+  function resultsHTML(p, votes){
+    const total = votes.length, counts = p.opties.map(o=>votes.filter(v=>v.optie===o).length), max = Math.max(...counts);
+    const bars = p.opties.map((o,i)=>{ const pct = total ? Math.round(counts[i]/total*100) : 0;
+      return `<div class="res-row${total && counts[i]===max ? ' win':''}"><span class="lbl">${esc(o)}</span><span class="n">${counts[i]} (${pct}%)</span><span class="bar"><i style="width:${pct}%"></i></span></div>`; }).join('');
+    const byApp = (a,b)=>String(a.appartement).localeCompare(String(b.appartement),'nl',{numeric:true});
+    const who = total ? `<details class="voters"><summary>Wie stemde wat</summary>${p.opties.map(o=>{
+        const l = votes.filter(v=>v.optie===o).sort(byApp);
+        return l.length ? `<h4>${esc(o)}</h4><ul>${l.map(v=>`<li>Appartement ${esc(v.appartement)}${v.wie_naam?` · ${esc(v.wie_naam)}`:''}</li>`).join('')}</ul>` : '';
+      }).join('')}</details>` : '';
+    return `<div class="results">${bars}</div>${who}`;
+  }
+  function renderPolls(){
+    $('noApp').hidden = !!state.myApp || !state.polls.some(isOpen);
+    const open = state.polls.filter(isOpen).sort((a,b)=>new Date(a.sluit)-new Date(b.sluit));
+    const closed = state.polls.filter(p=>!isOpen(p)).sort((a,b)=>new Date(b.sluit)-new Date(a.sluit));
+    const list = [...open, ...closed];
+    $('polls').innerHTML = !list.length ? `<p class="empty">Er zijn nog geen stemmingen.${state.isAdmin?' Maak er een aan met de knop hierboven.':''}</p>` : list.map(p=>{
+      const opn = isOpen(p), mine = myVote(p), votes = state.votes.filter(v=>v.stemming_id===p.id);
+      let body;
+      if (opn){
+        const canVote = !!state.myApp;
+        body = `<form class="vote-form" data-poll="${p.id}"><div class="choices" role="radiogroup" aria-label="Keuzes">${p.opties.map(o=>`
+            <label class="choice${canVote?'':' ro'}"><input type="radio" name="o${p.id}" value="${esc(o)}" ${mine&&mine.optie===o?'checked':''} ${canVote?'':'disabled'}>${esc(o)}</label>`).join('')}</div>
+          ${canVote?`<div class="vote-row"><button type="submit" class="btn primary">${mine?'Stem wijzigen':'Stem uitbrengen'}</button><span class="msg err" hidden></span></div>`:''}
+          </form>
+          ${mine?`<p class="my-vote">Appartement ${esc(state.myApp)} heeft gestemd: <strong>${esc(mine.optie)}</strong>${mine.wie_naam?` (door ${esc(mine.wie_naam)})`:''}. Je kunt dit wijzigen tot de sluiting.</p>`
+                : canVote?`<p class="turnout">Appartement ${esc(state.myApp)} heeft nog niet gestemd.</p>`:''}
+          <p class="turnout">${turnoutText(p)}</p>
+          ${state.isAdmin && votes.length ? `<details class="voters admin-peek"><summary>Tussenstand (alleen zichtbaar voor beheerders)</summary>${resultsHTML(p, votes)}</details>` : ''}`;
+      } else {
+        body = `${resultsHTML(p, votes)}<p class="turnout">${turnoutText(p)}</p>`;
+      }
+      return `<article class="poll">
+        <div class="meta">${opn?`<span class="status open">Open</span><span>${untilText(p.sluit)} · ${dateTime(p.sluit)}</span>`:`<span class="status closed">Gesloten</span><span>gesloten op ${dateTime(p.sluit)}</span>`}</div>
+        <h3>${esc(p.titel)}</h3>
+        ${p.toelichting?`<div class="body">${paragraphs(p.toelichting)}</div>`:''}
+        ${body}
+        ${state.isAdmin?`<div class="admin-row"><button class="btn quiet small" data-edit-poll="${p.id}">Wijzigen</button></div>`:''}
+      </article>`;
+    }).join('');
+    // Openstaande stemmingen waar dit appartement nog niet heeft gestemd
+    const todo = state.myApp ? open.filter(p=>!myVote(p)) : [];
+    $('voteDot').hidden = !todo.length; $('voteDot').textContent = todo.length;
+    $('voteBanner').innerHTML = todo.length ? `<a class="vote-banner" href="#stemmingen"><div><strong>${todo.length===1?esc(todo[0].titel):`Er lopen ${todo.length} stemmingen`}</strong><span>${todo.length===1?`Er loopt een stemming, ${untilText(todo[0].sluit)}.`:'Je appartement heeft nog niet op alles gestemd.'}</span></div><span class="btn primary">Stem nu</span></a>` : '';
+  }
+  $('polls').addEventListener('submit', async e=>{
+    const f = e.target.closest('.vote-form'); if (!f) return; e.preventDefault();
+    const err = f.querySelector('.msg'), btn = f.querySelector('button[type=submit]');
+    const choice = f.querySelector('input:checked');
+    if (!choice){ err.hidden=false; err.textContent='Kies eerst een van de opties.'; return; }
+    btn.disabled = true; err.hidden = true;
+    const { error } = await sb.rpc('stem', { p_stemming: Number(f.dataset.poll), p_optie: choice.value });
+    btn.disabled = false;
+    if (error){ err.hidden=false; err.textContent = /gesloten/i.test(error.message) ? 'Deze stemming is inmiddels gesloten.' : /appartement/i.test(error.message) ? 'Je account is nog niet gekoppeld aan een appartement.' : 'Stemmen lukte niet. Probeer het opnieuw.'; return; }
+    loadAll();
+  });
+
+  // Beheer: stemming aanmaken of wijzigen
+  let editingPoll=null, delArmedP=false;
+  function openPoll(p){
+    editingPoll=p||null; delArmedP=false;
+    const d = p ? new Date(p.sluit) : new Date(Date.now()+7*864e5);
+    const voted = p && (state.turnout[p.id]?.gestemd||0) > 0;
+    $('pollDlgTitle').textContent = p ? 'Stemming wijzigen' : 'Stemming aanmaken';
+    $('pTitel').value=p?.titel||''; $('pTekst').value=p?.toelichting||''; $('pOpties').value=p ? p.opties.join('\n') : '';
+    $('pOpties').disabled = voted; $('pOptiesHint').hidden = !voted;
+    $('pDatum').value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    $('pTijd').value = p ? `${pad(d.getHours())}:${pad(d.getMinutes())}` : '20:00';
+    $('pollDel').hidden=!p; $('pollDel').textContent='Verwijderen'; $('pollErr').hidden=true;
+    $('pollDlg').showModal(); $('pTitel').focus();
+  }
+  $('addPoll').onclick=()=>openPoll(null);
+  $('polls').addEventListener('click',e=>{ const b=e.target.closest('[data-edit-poll]'); if(b) openPoll(state.polls.find(x=>String(x.id)===b.dataset.editPoll)); });
+  $('pollCancel').onclick=()=>$('pollDlg').close();
+  $('pollForm').addEventListener('submit', async e=>{
+    e.preventDefault();
+    const opties = [...new Set($('pOpties').value.split('\n').map(x=>x.trim()).filter(Boolean))];
+    if (opties.length < 2) return showMsg('pollErr','Geef minimaal twee keuzes op, elk op een eigen regel.',true);
+    const sluit = new Date(`${$('pDatum').value}T${$('pTijd').value||'20:00'}`);
+    if (!editingPoll && sluit <= new Date()) return showMsg('pollErr','De sluitingsdatum ligt in het verleden.',true);
+    const row = { titel:$('pTitel').value.trim(), toelichting:$('pTekst').value.trim()||null, sluit:sluit.toISOString() };
+    if (!$('pOpties').disabled) row.opties = opties;
+    $('pollSave').disabled=true;
+    const q = editingPoll ? sb.from('stemmingen').update(row).eq('id',editingPoll.id) : sb.from('stemmingen').insert(row);
+    const { error } = await q; $('pollSave').disabled=false;
+    if (error) return showMsg('pollErr','Opslaan lukte niet. Controleer of je nog bent ingelogd en probeer het opnieuw.',true);
+    $('pollDlg').close(); loadAll();
+  });
+  $('pollDel').onclick = async ()=>{
+    if (!delArmedP){ delArmedP=true; $('pollDel').textContent='Klik nogmaals: stemming en alle stemmen verwijderen'; return; }
+    const { error } = await sb.from('stemmingen').delete().eq('id',editingPoll.id);
+    if (error) return showMsg('pollErr','Verwijderen lukte niet. Probeer het opnieuw.',true);
+    $('pollDlg').close(); loadAll();
+  };
+
+  // ---------- Bewoners (beheerder) ----------
+  function renderResidents(){
+    const list = [...state.residents].sort((a,b)=>String(a.appartement||'~').localeCompare(String(b.appartement||'~'),'nl',{numeric:true}) || String(a.email).localeCompare(String(b.email)));
+    const linked = new Set(list.map(r=>(r.appartement||'').trim()).filter(Boolean)).size;
+    const missing = list.filter(r=>!(r.appartement||'').trim()).length;
+    $('residents').innerHTML = `<p class="turnout" style="margin:14px 0 4px">${list.length} account${list.length==1?'':'s'} · ${linked} appartement${linked==1?'':'en'} gekoppeld${missing?` · <strong>${missing} nog zonder appartement</strong>`:''}. Nieuwe bewoners nodig je uit via Supabase (Authentication → Users → Invite user).</p>
+      <table class="res-table"><thead><tr><th>E-mailadres</th><th>Naam</th><th>Appartement</th><th></th></tr></thead><tbody>${list.map(r=>`
+        <tr data-res="${r.id}"><td class="mail">${esc(r.email)}${r.rol==='admin'?' <span class="pin">Beheerder</span>':''}</td>
+          <td><input class="naam" value="${esc(r.naam||'')}" maxlength="80" aria-label="Naam van ${esc(r.email)}"></td>
+          <td><input class="app" value="${esc(r.appartement||'')}" maxlength="20" placeholder="nr." aria-label="Appartement van ${esc(r.email)}"></td>
+          <td><span class="saved" hidden>Opgeslagen</span></td></tr>`).join('')}</tbody></table>`;
+  }
+  $('residents').addEventListener('change', async e=>{
+    const tr = e.target.closest('tr[data-res]'); if (!tr) return;
+    const row = { naam: tr.querySelector('.naam').value.trim()||null, appartement: tr.querySelector('.app').value.trim()||null };
+    const ok = tr.querySelector('.saved');
+    const { error } = await sb.from('profiles').update(row).eq('id', tr.dataset.res);
+    ok.hidden=false; ok.textContent = error ? 'Opslaan mislukt' : 'Opgeslagen'; ok.style.color = error ? 'var(--neg)' : '';
+    if (!error){ const r = state.residents.find(x=>x.id===tr.dataset.res); Object.assign(r,row);
+      const { data:{ session } } = await sb.auth.getSession();
+      if (session && tr.dataset.res===session.user.id){ state.myApp = row.appartement; renderPolls(); } }
+  });
+
   // ---------- Tabbladen ----------
-  const TABS = ['overzicht','mededelingen','agenda','bestuur','contacten'];
+  const TABS = ['overzicht','mededelingen','agenda','stemmingen','bestuur','contacten','bewoners'];
   function showTab(name){
-    if (!TABS.includes(name)) name='overzicht';
+    if (!TABS.includes(name) || (name==='bewoners' && !state.isAdmin)) name='overzicht';
     document.querySelectorAll('[data-panel]').forEach(p=>{ p.hidden = p.dataset.panel!==name; });
     document.querySelectorAll('#tabs [data-tab]').forEach(a=>{
       if (a.dataset.tab===name){ a.setAttribute('aria-current','page'); a.scrollIntoView({block:'nearest',inline:'nearest'}); }
