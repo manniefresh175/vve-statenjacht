@@ -122,6 +122,9 @@ main{max-width:1240px;margin:0 auto;padding:0 clamp(16px,4vw,48px) 64px}
 .body ul,.body ol,.fb-reply ul,.fb-reply ol{margin:8px 0;padding-left:24px}
 .body li+li,.fb-reply li+li{margin-top:3px}
 .body a,.fb-reply a{overflow-wrap:anywhere}
+dialog.ask{width:min(440px,calc(100vw - 32px))}
+dialog.ask p{color:var(--muted)}
+dialog.ask p strong{color:var(--ink)}
 dialog.wide{width:min(880px,calc(100vw - 32px))}
 textarea.long{min-height:min(340px,42vh)}
 .fmt-bar{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
@@ -445,6 +448,17 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     <div class="dlg-actions">
       <button type="button" class="btn danger" id="eventDel" hidden>Verwijderen</button>
       <div class="right"><button type="button" class="btn" id="eventCancel">Annuleren</button><button type="submit" class="btn primary" id="eventSave">Opslaan</button></div>
+    </div>
+  </form>
+</dialog>
+
+<!-- Bevestigen (algemeen) -->
+<dialog id="askDlg" class="ask">
+  <form method="dialog">
+    <h2 id="askTitle">Weet je het zeker?</h2>
+    <p id="askText"></p>
+    <div class="dlg-actions"><span></span>
+      <div class="right"><button type="button" class="btn" id="askNo">Annuleren</button><button type="submit" class="btn primary" id="askYes">Ja</button></div>
     </div>
   </form>
 </dialog>
@@ -871,6 +885,18 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     $('eventDlg').close(); loadAll();
   };
 
+  // Eigen bevestigingsvenster in de stijl van de site (in plaats van confirm())
+  function ask(title, html, yes='Ja'){
+    return new Promise(res=>{
+      const d=$('askDlg'); $('askTitle').textContent=title; $('askText').innerHTML=html; $('askYes').textContent=yes;
+      const done=v=>{ d.onclose=null; if (d.open) d.close(); res(v); };
+      $('askYes').onclick=e=>{ e.preventDefault(); done(true); };
+      $('askNo').onclick=()=>done(false);
+      d.onclose=()=>done(false);
+      d.showModal(); $('askYes').focus();
+    });
+  }
+
   // ---------- Stemmingen ----------
   const dateTime = d => new Date(d).toLocaleString('nl-NL',{weekday:'short',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'});
   const isOpen = p => new Date(p.sluit) > new Date();
@@ -952,7 +978,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     const err = f.querySelector('.msg'), btn = f.querySelector('button[type=submit]');
     const choice = f.querySelector('input:checked');
     if (!choice){ err.hidden=false; err.textContent='Kies eerst een van de opties.'; return; }
-    if (!confirm(`Je stemt namens appartement ${state.myApp}: "${choice.value}".\n\nJe stem is definitief en kan daarna niet meer worden gewijzigd. Doorgaan?`)) return;
+    if (!await ask('Stem uitbrengen?', `Je kiest <strong>${esc(choice.value)}</strong> namens appartement ${esc(state.myApp)}.`, 'Ja, stem uitbrengen')) return;
     btn.disabled = true; err.hidden = true;
     const { error } = await sb.rpc('stem', { p_stemming: Number(f.dataset.poll), p_optie: choice.value });
     btn.disabled = false;
@@ -966,7 +992,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
   $('polls').addEventListener('click', async e=>{
     const b=e.target.closest('[data-reset-vote]'); if (!b) return;
     const [id, app] = b.dataset.resetVote.split('|');
-    if (!confirm(`Stem van appartement ${app} intrekken? Het appartement kan daarna opnieuw stemmen.`)) return;
+    if (!await ask('Stem intrekken?', `De stem van appartement <strong>${esc(app)}</strong> wordt verwijderd. Daarna kan het appartement opnieuw stemmen.`, 'Stem intrekken')) return;
     b.disabled = true;
     const { error } = await sb.from('stemmen').delete().eq('stemming_id', Number(id)).eq('appartement', app);
     if (error){ b.disabled=false; alert('Intrekken lukte niet. Probeer het opnieuw.'); return; }
@@ -1032,8 +1058,8 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     const ok = tr.querySelector('.saved'), sel = tr.querySelector('.rol'), r0 = state.residents.find(x=>x.id===tr.dataset.res);
     if (e.target===sel){
       const wie = r0?.naam || r0?.email || 'Dit account';
-      const msg = sel.value==='admin' ? `${wie} beheerder maken?\n\nDeze persoon kan dan alles op de site aanpassen.` : `${wie} weer gewone bewoner maken?\n\nDeze persoon kan dan niets meer aanpassen.`;
-      if (!confirm(msg)){ sel.value = r0?.rol==='admin' ? 'admin' : 'lezer'; return; }
+      const msg = sel.value==='admin' ? `<strong>${esc(wie)}</strong> kan dan alles op de site aanpassen.` : `<strong>${esc(wie)}</strong> kan dan niets meer aanpassen.`;
+      if (!await ask(sel.value==='admin' ? 'Beheerder maken?' : 'Terug naar bewoner?', msg, sel.value==='admin' ? 'Ja, beheerder maken' : 'Ja, terugzetten')){ sel.value = r0?.rol==='admin' ? 'admin' : 'lezer'; return; }
       row.rol = sel.value;
     }
     const { error } = await sb.from('profiles').update(row).eq('id', tr.dataset.res);
