@@ -87,7 +87,7 @@ input:focus,textarea:focus{outline:2px solid var(--sky);outline-offset:0;border-
 .tabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--frame)}
 
 /* ---------- Pagina per tabblad ---------- */
-main.page{max-width:900px;padding-top:clamp(28px,5vw,48px)}
+main.page{max-width:1240px;padding-top:clamp(28px,5vw,48px)}
 .page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:6px}
 .page-head h1{font-size:clamp(32px,5vw,46px);font-weight:800;font-stretch:115%;letter-spacing:-.01em}
 .page-head p{color:var(--muted);margin-top:6px}
@@ -153,6 +153,7 @@ dialog h2{font-size:22px}
 .people-group+.people-group{margin-top:22px}
 .empty.small{padding:8px 0 4px;font-size:15px}
 .people-group h3{font-size:16px;font-weight:700;color:var(--brick);margin:18px 0 4px}
+@media (min-width:900px){.people-list,#contacts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:56px}#contacts > .empty{grid-column:1/-1}}
 .person{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
 .avatar{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:17px;color:#fff;background:var(--brick)}
 .tc .avatar{background:var(--river)}
@@ -210,7 +211,7 @@ dialog h2{font-size:22px}
 .voters ul{margin:0;padding-left:18px;font-size:15px;color:var(--muted)}
 .admin-peek{font-size:14px;color:var(--muted)}
 /* Feedback */
-.fb-form{display:flex;flex-direction:column;gap:14px;margin-top:22px;padding:22px;border-radius:12px;background:var(--surface);border:1px solid var(--line);max-width:680px}
+.fb-form{display:flex;flex-direction:column;gap:14px;margin-top:22px;padding:22px;border-radius:12px;background:var(--surface);border:1px solid var(--line);max-width:820px}
 .fb-form .field{max-width:320px}
 .fb-form .field.wide{max-width:none}
 .fb-form .vote-row{gap:14px}
@@ -227,7 +228,7 @@ dialog h2{font-size:22px}
 .fb-item .body{max-width:68ch}
 .fb-reply{padding:12px 14px;border-radius:8px;background:var(--sky-soft);max-width:68ch;font-size:15px}
 .fb-reply strong{display:block;font-size:13px;margin-bottom:2px}
-.fb-admin{display:flex;flex-direction:column;gap:10px;max-width:680px;margin-top:4px}
+.fb-admin{display:flex;flex-direction:column;gap:10px;max-width:820px;margin-top:4px}
 .fb-admin textarea{min-height:80px}
 .fb-admin .vote-row select{width:auto}
 /* Bewoners */
@@ -626,10 +627,10 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     const groups = [['bestuur','Bestuur', c=>c.groep==='bestuur'], ...COMMISSIES.map(n=>['tc', n, c=>c.groep==='tc' && commName(c)===n])];
     $('board').innerHTML = groups.map(([g,label,match])=>{
       const list = state.contacts.filter(match);
-      return `<div class="people-group ${g}"><h3>${label}</h3>${!list.length ? `<p class="empty small">Nog niemand toegevoegd.</p>` : list.map(c=>`
+      return `<div class="people-group ${g}"><h3>${label}</h3>${!list.length ? `<p class="empty small">Nog niemand toegevoegd.</p>` : '<div class="people-list">' + list.map(c=>`
         <div class="person"><div class="avatar" aria-hidden="true">${esc(initials(c.naam))}</div>
           <div><div class="nm">${esc(c.naam)}</div>${c.functie?`<div class="fn">${esc(c.functie)}</div>`:''}${c.toelichting?`<div class="fn">${esc(c.toelichting)}</div>`:''}${editBtn(c)}</div>
-          ${reach(c)}</div>`).join('')}</div>`;
+          ${reach(c)}</div>`).join('') + '</div>'}</div>`;
     }).join('');
     const ext = state.contacts.filter(c=>c.groep==='contact');
     $('contacts').innerHTML = !ext.length
