@@ -905,7 +905,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
         const canVote = !!state.myApp && !mine;
         body = `<form class="vote-form" data-poll="${p.id}"><div class="choices" role="radiogroup" aria-label="Keuzes">${p.opties.map(o=>`
             <label class="choice${canVote?'':' ro'}"><input type="radio" name="o${p.id}" value="${esc(o)}" ${mine&&mine.optie===o?'checked':''} ${canVote?'':'disabled'}>${esc(o)}</label>`).join('')}</div>
-          ${canVote?`<div class="vote-row"><button type="submit" class="btn primary">Stem uitbrengen</button><span class="small-print">Let op: je stem is definitief en kan daarna niet meer worden gewijzigd.</span><span class="msg err" hidden></span></div>`:''}
+          ${canVote?`<div class="vote-row"><button type="submit" class="btn primary">Stem uitbrengen</button><span class="msg err" hidden></span></div>`:''}
           </form>
           ${mine?`<p class="my-vote"><strong>Bedankt voor je stem!</strong> Appartement ${esc(state.myApp)} heeft gestemd: <strong>${esc(mine.optie)}</strong>${mine.wie_naam?` (door ${esc(mine.wie_naam)})`:''}. Heb je je vergist? <a href="#contact">Neem contact op met het bestuur</a>, dan kan het bestuur je stem intrekken zodat je opnieuw kunt stemmen.</p>`
                 : state.myApp?`<p class="turnout">Appartement ${esc(state.myApp)} heeft nog niet gestemd.</p>`:''}
