@@ -888,7 +888,8 @@ dialog .field input{width:100%}
     $('forgotBtn').disabled=true;
     const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin });
     $('forgotBtn').disabled=false;
-    if (error && /rate|seconds/i.test(error.message)) showMsg('forgotMsg','Je hebt net al een e-mail aangevraagd. Wacht een minuut en probeer het opnieuw.',true);
+    if (error && (error.status===429 || /rate|seconds|limit/i.test(error.message||''))) showMsg('forgotMsg','Er zijn net te veel e-mails verstuurd. De e-mail is niet verstuurd; probeer het over een uur opnieuw of neem contact op met het bestuur.',true);
+    else if (error) showMsg('forgotMsg','Versturen lukte niet. Probeer het later opnieuw.',true);
     else showMsg('forgotMsg', `Als ${email} toegang heeft, staat er binnen een paar minuten een e-mail in je inbox. Kijk ook in je spammap.`);
   });
 
