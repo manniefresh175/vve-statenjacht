@@ -90,7 +90,7 @@ input:focus,textarea:focus{outline:2px solid var(--sky);outline-offset:0;border-
 main.page{max-width:1240px;padding-top:clamp(28px,5vw,48px)}
 .page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:6px}
 .page-head h1{font-size:clamp(32px,5vw,46px);font-weight:800;font-stretch:115%;letter-spacing:-.01em}
-.page-head p{color:var(--muted);margin-top:6px}
+.page-head p{color:var(--muted);margin-top:6px;max-width:72ch}
 .see-all{font-weight:600;font-size:15px;text-decoration:none;white-space:nowrap}
 .see-all::after{content:" →"}
 .see-all:hover{text-decoration:underline}
@@ -153,7 +153,7 @@ dialog h2{font-size:22px}
 .people-group+.people-group{margin-top:22px}
 .empty.small{padding:8px 0 4px;font-size:15px}
 .people-group h3{font-size:16px;font-weight:700;color:var(--brick);margin:18px 0 4px}
-@media (min-width:900px){.people-list,#contacts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:56px}#contacts > .empty{grid-column:1/-1}}
+@media (min-width:900px){.people-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:56px}}
 .person{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
 .avatar{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:17px;color:#fff;background:var(--brick)}
 .tc .avatar{background:var(--river)}
@@ -299,8 +299,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     <a href="#agenda" data-tab="agenda">Agenda</a>
     <a href="#stemmingen" data-tab="stemmingen">Stemmingen<span class="tab-count" id="voteDot" hidden></span></a>
     <a href="#bestuur" data-tab="bestuur">Bestuur en commissies</a>
-    <a href="#contacten" data-tab="contacten">Contactpersonen</a>
-    <a href="#feedback" data-tab="feedback">Feedback<span class="tab-count" id="fbDot" hidden></span></a>
+    <a href="#contact" data-tab="contact">Contact<span class="tab-count" id="fbDot" hidden></span></a>
     <a href="#bewoners" data-tab="bewoners" id="tabBewoners" hidden>Bewoners</a>
     <a href="/mjop.html">MJOP</a>
   </nav>
@@ -347,13 +346,11 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     <div id="polls"><p class="empty">Laden…</p></div>
   </main>
 
-  <!-- Feedback -->
-  <main class="page" data-panel="feedback" hidden>
-    <div class="page-head"><div><h1>Feedback</h1><p>Een vraag, klacht, idee of compliment voor het bestuur? Laat het hier weten. Alleen het bestuur leest je bericht; je ziet hieronder wanneer het is opgepakt en wat het antwoord is.</p></div></div>
+  <!-- Contact (berichten aan het bestuur) -->
+  <main class="page" data-panel="contact" hidden>
+    <div class="page-head"><div><h1>Contact</h1><p>Een vraag, melding, idee of compliment voor het bestuur? Stuur het hier. Alleen het bestuur leest je bericht; je ziet hieronder wanneer het is opgepakt en wat het antwoord is.</p></div></div>
     <form class="fb-form" id="fbForm">
-      <div class="field"><label for="fbOnderwerp">Onderwerp</label>
-        <select id="fbOnderwerp"><option>Onderhoud</option><option>Schoonmaak</option><option>Overlast</option><option>Idee of voorstel</option><option>Website</option><option selected>Overig</option></select></div>
-      <div class="field wide"><label for="fbBericht">Je bericht</label><textarea id="fbBericht" required maxlength="4000" placeholder="Bijvoorbeeld: de lamp in het trappenhuis op de 3e verdieping is kapot."></textarea></div>
+      <div class="field wide"><label for="fbBericht">Je bericht aan het bestuur</label><textarea id="fbBericht" required maxlength="4000" placeholder="Bijvoorbeeld: de lamp in het trappenhuis op de 3e verdieping is kapot."></textarea></div>
       <div class="vote-row"><button type="submit" class="btn primary" id="fbSend">Versturen</button><span class="small-print">Je naam en appartement worden meegestuurd.</span></div>
       <p class="msg" id="fbMsg" hidden></p>
     </form>
@@ -378,13 +375,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     <div id="board"><p class="empty">Laden…</p></div>
   </main>
 
-  <!-- Contactpersonen -->
-  <main class="page" data-panel="contacten" hidden>
-    <div class="page-head"><div><h1>Contactpersonen</h1><p>Beheerder, storingsnummers en andere handige contacten.</p></div><button class="btn small" id="addContact" hidden>Contact toevoegen</button></div>
-    <div id="contacts"><p class="empty">Laden…</p></div>
-  </main>
-
-  <footer>VVE Statenjacht · Vragen over de website? Neem contact op met het bestuur.</footer>
+  <footer>VVE Statenjacht · Vragen of opmerkingen? <a href="#contact">Neem contact op met het bestuur</a>.</footer>
 </div>
 
 <!-- Mededeling plaatsen / wijzigen -->
@@ -449,7 +440,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
   <form id="contactForm" method="dialog">
     <h2 id="contactDlgTitle">Persoon toevoegen</h2>
     <div class="field"><label for="cGroep">Hoort bij</label>
-      <select id="cGroep"><option value="bestuur">Bestuur</option><option value="tc:Technische commissie">Technische commissie</option><option value="tc:Kascommissie">Kascommissie</option><option value="tc:Overige">Overige</option><option value="contact">Contactpersonen</option></select></div>
+      <select id="cGroep"><option value="bestuur">Bestuur</option><option value="tc:Technische commissie">Technische commissie</option><option value="tc:Kascommissie">Kascommissie</option><option value="tc:Overige">Overige</option></select></div>
     <div class="field"><label for="cNaam" id="cNaamLabel">Naam</label><input id="cNaam" required maxlength="120"></div>
     <div class="field"><label for="cFunctie" id="cFunctieLabel">Functie</label><input id="cFunctie" maxlength="120"></div>
     <div class="row2">
@@ -540,7 +531,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     state.isAdmin = prof?.rol === 'admin';
     $('role').textContent = state.isAdmin ? 'Beheerder' : 'Bewoner';
     state.myApp = (prof?.appartement||'').trim() || null;
-    $('addNews').hidden = $('addEvent').hidden = $('addPerson').hidden = $('addContact').hidden = $('addPoll').hidden = $('tabBewoners').hidden = !state.isAdmin;
+    $('addNews').hidden = $('addEvent').hidden = $('addPerson').hidden = $('addPoll').hidden = $('tabBewoners').hidden = !state.isAdmin;
     showTab(hashTab());
     loadAll();
   }
@@ -632,11 +623,6 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
           <div><div class="nm">${esc(c.naam)}</div>${c.functie?`<div class="fn">${esc(c.functie)}</div>`:''}${c.toelichting?`<div class="fn">${esc(c.toelichting)}</div>`:''}${editBtn(c)}</div>
           ${reach(c)}</div>`).join('') + '</div>'}</div>`;
     }).join('');
-    const ext = state.contacts.filter(c=>c.groep==='contact');
-    $('contacts').innerHTML = !ext.length
-      ? `<p class="empty">Nog geen contactpersonen.${state.isAdmin?' Denk aan de beheerder, het storingsnummer van de lift of de schoonmaak.':''}</p>`
-      : ext.map(c=>`<div class="contact"><div><div class="nm">${esc(c.naam)}</div>${c.functie?`<div class="fn">${esc(c.functie)}</div>`:''}</div>
-          ${reach(c)}${c.toelichting?`<p class="note">${esc(c.toelichting)}</p>`:''}${state.isAdmin?`<div style="grid-column:1/-1">${editBtn(c)}</div>`:''}</div>`).join('');
   }
 
   let editingContact=null, delArmedC=false;
@@ -657,8 +643,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
   }
   $('cGroep').onchange = syncContactLabels;
   $('addPerson').onclick = ()=>openContact(null,'bestuur');
-  $('addContact').onclick = ()=>openContact(null,'contact');
-  [$('board'),$('contacts')].forEach(box=>box.addEventListener('click',e=>{
+  [$('board')].forEach(box=>box.addEventListener('click',e=>{
     const b=e.target.closest('[data-edit-contact]'); if(b) openContact(state.contacts.find(x=>String(x.id)===b.dataset.editContact));
   }));
   $('contactCancel').onclick=()=>$('contactDlg').close();
@@ -934,7 +919,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
             <button type="submit" class="btn small primary">Opslaan</button><button type="button" class="btn quiet small" data-fb-del="${f.id}">Verwijderen</button><span class="msg err" hidden></span></div>
         </form>` : reply;
       return `<article class="fb-item">
-        <div class="meta"><span class="status ${cls}">${label}</span><span class="tag">${esc(f.onderwerp)}</span><span>${dateLong(f.gemaakt)}</span>${who}</div>
+        <div class="meta"><span class="status ${cls}">${label}</span><span>${dateLong(f.gemaakt)}</span>${who}</div>
         <div class="body">${paragraphs(f.bericht)}</div>
         ${adminBox}
       </article>`;
@@ -945,7 +930,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     const msg=$('fbMsg'), btn=$('fbSend'), tekst=$('fbBericht').value.trim();
     if (!tekst){ msg.hidden=false; msg.className='msg err'; msg.textContent='Schrijf eerst je bericht.'; return; }
     btn.disabled=true; msg.hidden=true;
-    const { error } = await sb.from('feedback').insert({ onderwerp:$('fbOnderwerp').value, bericht:tekst });
+    const { error } = await sb.from('feedback').insert({ bericht:tekst });
     btn.disabled=false; msg.hidden=false;
     if (error){ msg.className='msg err'; msg.textContent='Versturen lukte niet. Probeer het opnieuw.'; return; }
     msg.className='msg ok'; msg.textContent='Bedankt, je bericht is verstuurd naar het bestuur.';
@@ -975,7 +960,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
   });
 
   // ---------- Tabbladen ----------
-  const TABS = ['overzicht','mededelingen','agenda','stemmingen','bestuur','contacten','feedback','bewoners'];
+  const TABS = ['overzicht','mededelingen','agenda','stemmingen','bestuur','contact','bewoners'];
   function showTab(name){
     if (!TABS.includes(name) || (name==='bewoners' && !state.isAdmin)) name='overzicht';
     document.querySelectorAll('[data-panel]').forEach(p=>{ p.hidden = p.dataset.panel!==name; });
