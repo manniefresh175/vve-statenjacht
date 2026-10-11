@@ -1,6 +1,6 @@
 # VVE Statenjacht website – overdracht voor Claude
 
-Lees dit eerst bij elke nieuwe sessie. De eigenaar (Manuel, manniefresh175@gmail.com) is beheerder van
+Lees dit eerst bij elke nieuwe sessie. De eigenaar (Manuel Dekker; site-account manueldekker@me.com, GitHub manniefresh175) is beheerder van
 VVE Statenjacht en schrijft meestal Nederlands. Antwoord in het Nederlands, kort en praktisch.
 
 ## Harde afspraken
