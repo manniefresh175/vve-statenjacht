@@ -77,6 +77,27 @@ input:focus,textarea:focus{outline:2px solid var(--sky);outline-offset:0;border-
 .who{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--muted);flex-wrap:wrap;justify-content:flex-end}
 .who .role{font-size:12px;font-weight:600;color:var(--brick);border:1px solid color-mix(in srgb,var(--brick) 40%,transparent);border-radius:20px;padding:1px 9px;margin-right:6px}
 
+.top{border-bottom:0}
+
+/* ---------- Tabbladen ---------- */
+.tabs{position:sticky;top:0;z-index:20;display:flex;gap:2px;padding:0 clamp(8px,4vw,40px);background:var(--surface);border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.tabs::-webkit-scrollbar{display:none}
+.tabs a{flex:none;display:flex;align-items:center;height:50px;padding:0 12px;font-family:var(--f-display);font-weight:600;font-size:15px;color:var(--muted);text-decoration:none;border-bottom:3px solid transparent}
+.tabs a:hover{color:var(--ink)}
+.tabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--frame)}
+.tabs a.ext{margin-left:auto;color:var(--sky)}
+.tabs a.ext::after{content:"→";margin-left:6px}
+
+/* ---------- Pagina per tabblad ---------- */
+main.page{max-width:900px;padding-top:clamp(28px,5vw,48px)}
+.page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:6px}
+.page-head h1{font-size:clamp(32px,5vw,46px);font-weight:800;font-stretch:115%;letter-spacing:-.01em}
+.page-head p{color:var(--muted);margin-top:6px}
+.see-all{font-weight:600;font-size:15px;text-decoration:none;white-space:nowrap}
+.see-all::after{content:" →"}
+.see-all:hover{text-decoration:underline}
+.load-err{max-width:1240px;margin:16px auto 0}
+
 /* ---------- Hero ---------- */
 .hero{height:clamp(300px,52vh,520px)}
 .hero-text{position:absolute;left:0;right:0;bottom:0;z-index:1;padding:0 clamp(16px,4vw,48px) calc(clamp(22px,4vw,40px) + 34px);color:#fff;max-width:1240px;margin:0 auto}
@@ -204,12 +225,25 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
 <!-- ================= Dashboard ================= -->
 <div id="app" hidden>
   <div class="top">
-    <a class="brand" href="/"><i aria-hidden="true"></i>VVE Statenjacht</a>
+    <a class="brand" href="#overzicht"><i aria-hidden="true"></i>VVE Statenjacht</a>
     <div class="who"><span class="role" id="role"></span><span id="who"></span>
       <button class="btn quiet small" id="pwChangeBtn">Wachtwoord wijzigen</button>
       <button class="btn quiet small" id="logoutBtn">Uitloggen</button></div>
   </div>
 
+  <nav class="tabs" id="tabs" aria-label="Onderdelen">
+    <a href="#overzicht" data-tab="overzicht">Overzicht</a>
+    <a href="#mededelingen" data-tab="mededelingen">Mededelingen</a>
+    <a href="#agenda" data-tab="agenda">Agenda</a>
+    <a href="#bestuur" data-tab="bestuur">Bestuur en commissies</a>
+    <a href="#contacten" data-tab="contacten">Contactpersonen</a>
+    <a href="/mjop.html" class="ext">MJOP Planner</a>
+  </nav>
+
+  <div class="load-err" id="loadErr" hidden>De gegevens konden niet worden geladen. Ververs de pagina of probeer het later opnieuw.</div>
+
+  <!-- Overzicht -->
+  <div data-panel="overzicht">
   <header class="photo hero" role="img" aria-label="Het gebouw Statenjacht aan de rivier">
     <div class="hero-text"><p id="greeting">Welkom</p><h1>Statenjacht</h1></div>
   </header>
@@ -228,30 +262,43 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
       <a class="btn primary" href="/mjop.html">MJOP Planner openen</a>
     </section>
 
-    <div class="load-err" id="loadErr" hidden>De gegevens konden niet worden geladen. Ververs de pagina of probeer het later opnieuw.</div>
-
     <div class="cols">
-      <section aria-labelledby="newsTitle">
-        <div class="col-head"><h2 id="newsTitle">Mededelingen</h2><button class="btn small" id="addNews" hidden>Mededeling plaatsen</button></div>
-        <div id="news"><p class="empty">Laden…</p></div>
+      <section aria-labelledby="homeNewsTitle">
+        <div class="col-head"><h2 id="homeNewsTitle">Laatste mededelingen</h2><a class="see-all" href="#mededelingen">Alle mededelingen</a></div>
+        <div id="homeNews"><p class="empty">Laden…</p></div>
       </section>
-      <section aria-labelledby="agendaTitle">
-        <div class="col-head"><h2 id="agendaTitle">Agenda</h2><button class="btn small" id="addEvent" hidden>Afspraak toevoegen</button></div>
-        <div id="agenda"><p class="empty">Laden…</p></div>
-      </section>
-    </div>
-
-    <div class="cols">
-      <section aria-labelledby="boardTitle">
-        <div class="col-head"><h2 id="boardTitle">Bestuur en commissies</h2><button class="btn small" id="addPerson" hidden>Persoon toevoegen</button></div>
-        <div id="board"><p class="empty">Laden…</p></div>
-      </section>
-      <section aria-labelledby="contactTitle">
-        <div class="col-head"><h2 id="contactTitle">Contactpersonen</h2><button class="btn small" id="addContact" hidden>Contact toevoegen</button></div>
-        <div id="contacts"><p class="empty">Laden…</p></div>
+      <section aria-labelledby="homeAgendaTitle">
+        <div class="col-head"><h2 id="homeAgendaTitle">Binnenkort</h2><a class="see-all" href="#agenda">Hele agenda</a></div>
+        <div id="homeAgenda"><p class="empty">Laden…</p></div>
       </section>
     </div>
   </main>
+  </div>
+
+  <!-- Mededelingen -->
+  <main class="page" data-panel="mededelingen" hidden>
+    <div class="page-head"><div><h1>Mededelingen</h1><p>Nieuws en berichten van het bestuur.</p></div><button class="btn small" id="addNews" hidden>Mededeling plaatsen</button></div>
+    <div id="news"><p class="empty">Laden…</p></div>
+  </main>
+
+  <!-- Agenda -->
+  <main class="page" data-panel="agenda" hidden>
+    <div class="page-head"><div><h1>Agenda</h1><p>Vergaderingen, onderhoud en andere afspraken.</p></div><button class="btn small" id="addEvent" hidden>Afspraak toevoegen</button></div>
+    <div id="agenda"><p class="empty">Laden…</p></div>
+  </main>
+
+  <!-- Bestuur en commissies -->
+  <main class="page" data-panel="bestuur" hidden>
+    <div class="page-head"><div><h1>Bestuur en commissies</h1><p>Wie zit er in het bestuur en de commissies, en hoe bereik je ze.</p></div><button class="btn small" id="addPerson" hidden>Persoon toevoegen</button></div>
+    <div id="board"><p class="empty">Laden…</p></div>
+  </main>
+
+  <!-- Contactpersonen -->
+  <main class="page" data-panel="contacten" hidden>
+    <div class="page-head"><div><h1>Contactpersonen</h1><p>Beheerder, storingsnummers en andere handige contacten.</p></div><button class="btn small" id="addContact" hidden>Contact toevoegen</button></div>
+    <div id="contacts"><p class="empty">Laden…</p></div>
+  </main>
+
   <footer>VVE Statenjacht · Vragen over de website? Neem contact op met het bestuur.</footer>
 </div>
 
@@ -397,8 +444,8 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     const [p,o,n,a,c] = await Promise.all([
       sb.from('plan').select('*').eq('id',1).maybeSingle(),
       sb.from('onderdelen').select('bedrag,cyclus,eerste,jaren'),
-      sb.from('mededelingen').select('*').order('vastgepind',{ascending:false}).order('geplaatst',{ascending:false}).limit(10),
-      sb.from('agenda').select('*').gte('start', today.toISOString()).order('start',{ascending:true}).limit(8),
+      sb.from('mededelingen').select('*').order('vastgepind',{ascending:false}).order('geplaatst',{ascending:false}).limit(50),
+      sb.from('agenda').select('*').gte('start', today.toISOString()).order('start',{ascending:true}).limit(40),
       sb.from('contacten').select('*').order('volgorde',{ascending:true}).order('naam',{ascending:true})
     ]);
     $('loadErr').hidden = !(p.error || o.error || n.error || a.error || c.error);
@@ -441,42 +488,49 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
   // ---------- Mededelingen ----------
   const dateLong = d => new Date(d).toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'});
   function paragraphs(t){ return String(t||'').split(/\n{2,}|\r\n\r\n/).map(p=>`<p>${esc(p).replace(/\n/g,'<br>')}</p>`).join(''); }
-  function renderNews(){
-    const box=$('news');
-    if (!state.news.length){ box.innerHTML = `<p class="empty">Er zijn nog geen mededelingen.${state.isAdmin?' Plaats de eerste met de knop hierboven.':''}</p>`; return; }
-    box.innerHTML = state.news.map(m=>`
+  const noticeHTML = (m, admin) => `
       <article class="notice" data-id="${m.id}">
         <div class="meta">${m.vastgepind?'<span class="pin">Vastgezet</span>':''}<span>${dateLong(m.geplaatst)}</span>${m.auteur_naam?`<span>${esc(m.auteur_naam)}</span>`:''}</div>
         <h3>${esc(m.titel)}</h3>
         <div class="body clamp">${paragraphs(m.tekst)}</div>
         <button class="more" type="button" hidden>Lees verder</button>
-        ${state.isAdmin?`<div class="admin-row"><button class="btn quiet small" data-edit-news="${m.id}">Wijzigen</button></div>`:''}
-      </article>`).join('');
-    // Alleen "Lees verder" tonen als de tekst echt is ingekort
-    box.querySelectorAll('.notice').forEach(n=>{
+        ${admin?`<div class="admin-row"><button class="btn quiet small" data-edit-news="${m.id}">Wijzigen</button></div>`:''}
+      </article>`;
+  function renderNews(){
+    const none = `<p class="empty">Er zijn nog geen mededelingen.${state.isAdmin?' Plaats de eerste op het tabblad Mededelingen.':''}</p>`;
+    $('news').innerHTML = state.news.length ? state.news.map(m=>noticeHTML(m, state.isAdmin)).join('') : none.replace(' op het tabblad Mededelingen',' met de knop hierboven');
+    $('homeNews').innerHTML = state.news.length ? state.news.slice(0,2).map(m=>noticeHTML(m, false)).join('') : none;
+    fixClamps();
+  }
+  // Alleen "Lees verder" tonen als de tekst echt is ingekort (werkt alleen op een zichtbaar tabblad)
+  function fixClamps(){
+    document.querySelectorAll('.notice').forEach(n=>{
       const body=n.querySelector('.body'), more=n.querySelector('.more');
-      if (body.scrollHeight > body.clientHeight + 2) more.hidden=false;
+      if (!body.classList.contains('clamp') || !body.offsetParent) return;
+      more.hidden = !(body.scrollHeight > body.clientHeight + 2);
       more.onclick=()=>{ const open=body.classList.toggle('clamp'); more.textContent = open ? 'Lees verder' : 'Inklappen'; };
     });
   }
 
   // ---------- Agenda ----------
-  function renderAgenda(){
-    const box=$('agenda');
-    if (!state.events.length){ box.innerHTML = `<p class="empty">Er staan geen afspraken gepland.${state.isAdmin?' Voeg er een toe met de knop hierboven.':''}</p>`; return; }
+  function eventHTML(ev, admin){
     const today=new Date(); today.setHours(0,0,0,0);
-    box.innerHTML = state.events.map(ev=>{
-      const d=new Date(ev.start), days=Math.round((new Date(d).setHours(0,0,0,0)-today)/864e5);
-      const soon = days===0 ? 'Vandaag' : days===1 ? 'Morgen' : days<7 ? `Over ${days} dagen` : '';
-      const t = ev.hele_dag ? 'Hele dag' : d.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'}) + (ev.eind ? ' – ' + new Date(ev.eind).toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'}) : ' uur');
-      return `<article class="event">
+    const d=new Date(ev.start), days=Math.round((new Date(d).setHours(0,0,0,0)-today)/864e5);
+    const soon = days===0 ? 'Vandaag' : days===1 ? 'Morgen' : days<7 ? `Over ${days} dagen` : '';
+    const t = ev.hele_dag ? 'Hele dag' : d.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'}) + (ev.eind ? ' – ' + new Date(ev.eind).toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'}) : ' uur');
+    return `<article class="event">
         <div class="leaf" aria-hidden="true"><div class="m">${d.toLocaleDateString('nl-NL',{month:'short'}).replace('.','')}</div><div class="d">${d.getDate()}</div><div class="w">${d.toLocaleDateString('nl-NL',{weekday:'short'})}</div></div>
         <div><h3>${esc(ev.titel)}</h3>
           <p class="when">${soon?`<span class="soon">${soon}</span> · `:''}${d.toLocaleDateString('nl-NL',{weekday:'long',day:'numeric',month:'long'})}, ${t}${ev.locatie?` · ${esc(ev.locatie)}`:''}</p>
           ${ev.omschrijving?`<p class="desc">${esc(ev.omschrijving)}</p>`:''}
-          ${state.isAdmin?`<div class="admin-row"><button class="btn quiet small" data-edit-event="${ev.id}">Wijzigen</button></div>`:''}
+          ${admin?`<div class="admin-row"><button class="btn quiet small" data-edit-event="${ev.id}">Wijzigen</button></div>`:''}
         </div></article>`;
-    }).join('');
+  }
+  function renderAgenda(){
+    const none = `<p class="empty">Er staan geen afspraken gepland.</p>`;
+    $('agenda').innerHTML = state.events.length ? state.events.map(ev=>eventHTML(ev, state.isAdmin)).join('')
+      : `<p class="empty">Er staan geen afspraken gepland.${state.isAdmin?' Voeg er een toe met de knop hierboven.':''}</p>`;
+    $('homeAgenda').innerHTML = state.events.length ? state.events.slice(0,3).map(ev=>eventHTML(ev, false)).join('') : none;
   }
 
   // ---------- Bestuur, technische commissie en contactpersonen ----------
@@ -620,6 +674,21 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     if (error) return showMsg('eventErr','Verwijderen lukte niet. Probeer het opnieuw.',true);
     $('eventDlg').close(); loadAll();
   };
+
+  // ---------- Tabbladen ----------
+  const TABS = ['overzicht','mededelingen','agenda','bestuur','contacten'];
+  function showTab(name){
+    if (!TABS.includes(name)) name='overzicht';
+    document.querySelectorAll('[data-panel]').forEach(p=>{ p.hidden = p.dataset.panel!==name; });
+    document.querySelectorAll('#tabs [data-tab]').forEach(a=>{
+      if (a.dataset.tab===name){ a.setAttribute('aria-current','page'); a.scrollIntoView({block:'nearest',inline:'nearest'}); }
+      else a.removeAttribute('aria-current');
+    });
+    fixClamps();
+  }
+  const hashTab = () => { const h=location.hash.slice(1); return h.includes('=') ? 'overzicht' : h; };
+  window.addEventListener('hashchange', ()=>{ if (location.hash.includes('=')) return; showTab(hashTab()); window.scrollTo(0,0); });
+  showTab(hashTab());
 
   // Nieuwste gegevens bij terugkeer naar het tabblad
   document.addEventListener('visibilitychange', ()=>{ if (!document.hidden && state.started) loadAll(); });
