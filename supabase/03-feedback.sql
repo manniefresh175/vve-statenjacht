@@ -1,0 +1,6 @@
+-- Feedback van bewoners aan het bestuur (al uitgevoerd in Supabase op 11 oktober 2026 als migratie 'feedback'; alleen ter documentatie)
+-- Tabel public.feedback: id, gemaakt, user_id, naam, email, appartement (door trigger uit profiles gevuld),
+--   onderwerp ('Onderhoud','Schoonmaak','Overlast','Website','Idee of voorstel','Overig'), bericht (max 4000),
+--   status ('nieuw','in behandeling','afgehandeld'), antwoord, beantwoord.
+-- Trigger feedback_vul_afzender(): zet afzender vanuit het profiel en dwingt status 'nieuw' zonder antwoord bij insturen.
+-- RLS: bewoner leest alleen eigen berichten en mag insturen; beheerder (is_admin()) leest, wijzigt en verwijdert alles.

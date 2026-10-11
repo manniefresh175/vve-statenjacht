@@ -209,6 +209,27 @@ dialog h2{font-size:22px}
 .voters h4{margin:14px 0 4px;font-size:15px}
 .voters ul{margin:0;padding-left:18px;font-size:15px;color:var(--muted)}
 .admin-peek{font-size:14px;color:var(--muted)}
+/* Feedback */
+.fb-form{display:flex;flex-direction:column;gap:14px;margin-top:22px;padding:22px;border-radius:12px;background:var(--surface);border:1px solid var(--line);max-width:680px}
+.fb-form .field{max-width:320px}
+.fb-form .field.wide{max-width:none}
+.fb-form .vote-row{gap:14px}
+.msg.ok{background:color-mix(in srgb,var(--pos) 12%,var(--surface));color:var(--pos)}
+.fb-head{margin-top:40px}
+.fb-filter{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 4px}
+.fb-filter button[aria-pressed="true"]{border-color:var(--sky);color:var(--sky);background:var(--sky-soft)}
+.fb-item{padding:20px 0;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.fb-item .meta{font-size:14px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.fb-item .tag{font-size:12px;font-weight:600;border-radius:20px;padding:2px 10px;color:var(--brick);background:color-mix(in srgb,var(--frame) 16%,transparent)}
+.status.nieuw{color:#fff;background:var(--frame)}
+.status.behandeling{color:#fff;background:var(--sky)}
+.status.klaar{color:#fff;background:var(--pos)}
+.fb-item .body{max-width:68ch}
+.fb-reply{padding:12px 14px;border-radius:8px;background:var(--sky-soft);max-width:68ch;font-size:15px}
+.fb-reply strong{display:block;font-size:13px;margin-bottom:2px}
+.fb-admin{display:flex;flex-direction:column;gap:10px;max-width:680px;margin-top:4px}
+.fb-admin textarea{min-height:80px}
+.fb-admin .vote-row select{width:auto}
 /* Bewoners */
 .res-table{width:100%;border-collapse:collapse;font-size:15px}
 .res-table th{text-align:left;font-size:13px;color:var(--muted);font-weight:600;padding:12px 8px 8px;border-bottom:1px solid var(--line)}
@@ -278,6 +299,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     <a href="#stemmingen" data-tab="stemmingen">Stemmingen<span class="tab-count" id="voteDot" hidden></span></a>
     <a href="#bestuur" data-tab="bestuur">Bestuur en commissies</a>
     <a href="#contacten" data-tab="contacten">Contactpersonen</a>
+    <a href="#feedback" data-tab="feedback">Feedback<span class="tab-count" id="fbDot" hidden></span></a>
     <a href="#bewoners" data-tab="bewoners" id="tabBewoners" hidden>Bewoners</a>
     <a href="/mjop.html">MJOP</a>
   </nav>
@@ -322,6 +344,25 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     <div class="page-head"><div><h1>Stemmingen</h1><p>Je stemt namens je appartement; per appartement telt één stem. Na de sluitingsdatum ziet iedereen de uitslag en wie wat heeft gestemd.</p></div><button class="btn small" id="addPoll" hidden>Stemming aanmaken</button></div>
     <p class="msg" id="noApp" hidden>Je account is nog niet gekoppeld aan een appartement, daarom kun je nog niet stemmen. Vraag het bestuur om dit in te stellen.</p>
     <div id="polls"><p class="empty">Laden…</p></div>
+  </main>
+
+  <!-- Feedback -->
+  <main class="page" data-panel="feedback" hidden>
+    <div class="page-head"><div><h1>Feedback</h1><p>Een vraag, klacht, idee of compliment voor het bestuur? Laat het hier weten. Alleen het bestuur leest je bericht; je ziet hieronder wanneer het is opgepakt en wat het antwoord is.</p></div></div>
+    <form class="fb-form" id="fbForm">
+      <div class="field"><label for="fbOnderwerp">Onderwerp</label>
+        <select id="fbOnderwerp"><option>Onderhoud</option><option>Schoonmaak</option><option>Overlast</option><option>Idee of voorstel</option><option>Website</option><option selected>Overig</option></select></div>
+      <div class="field wide"><label for="fbBericht">Je bericht</label><textarea id="fbBericht" required maxlength="4000" placeholder="Bijvoorbeeld: de lamp in het trappenhuis op de 3e verdieping is kapot."></textarea></div>
+      <div class="vote-row"><button type="submit" class="btn primary" id="fbSend">Versturen</button><span class="small-print">Je naam en appartement worden meegestuurd.</span></div>
+      <p class="msg" id="fbMsg" hidden></p>
+    </form>
+    <div class="col-head fb-head"><h2 id="fbListTitle">Jouw berichten</h2></div>
+    <div class="fb-filter" id="fbFilter" hidden>
+      <button type="button" class="btn small" data-f="open" aria-pressed="true">Openstaand</button>
+      <button type="button" class="btn small" data-f="klaar" aria-pressed="false">Afgehandeld</button>
+      <button type="button" class="btn small" data-f="alle" aria-pressed="false">Alles</button>
+    </div>
+    <div id="fbList"><p class="empty">Laden…</p></div>
   </main>
 
   <!-- Bewoners (alleen beheerder) -->
@@ -429,7 +470,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const eur = new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',maximumFractionDigits:0});
-  const state = { isAdmin:false, naam:'', news:[], events:[], contacts:[], polls:[], votes:[], turnout:{}, residents:[], myApp:null, started:false };
+  const state = { isAdmin:false, naam:'', news:[], events:[], contacts:[], polls:[], votes:[], turnout:{}, residents:[], feedback:[], fbFilter:'open', myApp:null, started:false };
 
   // ---------- Supabase ----------
   const SUPABASE_URL = 'https://tnqjubjtsdwulwjbbhfp.supabase.co';
@@ -504,19 +545,21 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
   }
   async function loadAll(){
     const today = new Date(); today.setHours(0,0,0,0);
-    const [n,a,c,ps,vs,to,rs] = await Promise.all([
+    const [n,a,c,ps,vs,to,rs,fb] = await Promise.all([
       sb.from('mededelingen').select('*').order('vastgepind',{ascending:false}).order('geplaatst',{ascending:false}).limit(50),
       sb.from('agenda').select('*').gte('start', today.toISOString()).order('start',{ascending:true}).limit(40),
       sb.from('contacten').select('*').order('volgorde',{ascending:true}).order('naam',{ascending:true}),
       sb.from('stemmingen').select('*'),
       sb.from('stemmen').select('*'),
       sb.rpc('stem_opkomst'),
-      state.isAdmin ? sb.from('profiles').select('id,email,naam,appartement,rol') : Promise.resolve({data:[]})
+      state.isAdmin ? sb.from('profiles').select('id,email,naam,appartement,rol') : Promise.resolve({data:[]}),
+      sb.from('feedback').select('*').order('gemaakt',{ascending:false}).limit(300)
     ]);
     $('loadErr').hidden = !(n.error || a.error || c.error || ps.error || vs.error);
     state.polls = ps.data || []; state.votes = vs.data || [];
     state.turnout = Object.fromEntries((to.data||[]).map(r=>[r.stemming_id, r]));
     state.residents = rs.data || [];
+    state.feedback = fb.data || []; renderFeedback();
     renderPolls(); if (state.isAdmin) renderResidents();
     state.contacts = c.data || []; renderContacts();
     state.news = n.data || []; state.events = a.data || [];
@@ -866,8 +909,72 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
       if (session && tr.dataset.res===session.user.id){ state.myApp = row.appartement; renderPolls(); } }
   });
 
+  // ---------- Feedback ----------
+  const FB_STATUS = { 'nieuw':['nieuw','Nieuw'], 'in behandeling':['behandeling','In behandeling'], 'afgehandeld':['klaar','Afgehandeld'] };
+  function renderFeedback(){
+    const admin = state.isAdmin;
+    $('fbListTitle').textContent = admin ? 'Ontvangen berichten' : 'Jouw berichten';
+    $('fbFilter').hidden = !admin;
+    const nieuw = admin ? state.feedback.filter(f=>f.status==='nieuw').length : 0;
+    $('fbDot').hidden = !nieuw; $('fbDot').textContent = nieuw;
+    let list = state.feedback;
+    if (admin && state.fbFilter==='open') list = list.filter(f=>f.status!=='afgehandeld');
+    if (admin && state.fbFilter==='klaar') list = list.filter(f=>f.status==='afgehandeld');
+    if (!list.length){
+      $('fbList').innerHTML = `<p class="empty">${admin ? (state.fbFilter==='open' ? 'Er staan geen berichten open.' : 'Geen berichten.') : 'Je hebt nog geen berichten gestuurd.'}</p>`; return;
+    }
+    $('fbList').innerHTML = list.map(f=>{
+      const [cls,label] = FB_STATUS[f.status] || ['nieuw',f.status];
+      const who = admin ? `<span>${esc(f.naam||f.email||'Onbekend')}${f.appartement?` · app. ${esc(f.appartement)}`:''}</span>${f.email?`<a href="mailto:${esc(f.email)}">${esc(f.email)}</a>`:''}` : '';
+      const reply = f.antwoord ? `<div class="fb-reply"><strong>Antwoord van het bestuur${f.beantwoord?` · ${dateLong(f.beantwoord)}`:''}</strong>${paragraphs(f.antwoord)}</div>` : '';
+      const adminBox = admin ? `<form class="fb-admin" data-fb="${f.id}">
+          <div class="field"><label for="fbA${f.id}">Antwoord aan de bewoner (optioneel)</label><textarea id="fbA${f.id}" maxlength="4000">${esc(f.antwoord||'')}</textarea></div>
+          <div class="vote-row"><select aria-label="Status">${Object.keys(FB_STATUS).map(s=>`<option value="${s}" ${s===f.status?'selected':''}>${FB_STATUS[s][1]}</option>`).join('')}</select>
+            <button type="submit" class="btn small primary">Opslaan</button><button type="button" class="btn quiet small" data-fb-del="${f.id}">Verwijderen</button><span class="msg err" hidden></span></div>
+        </form>` : reply;
+      return `<article class="fb-item">
+        <div class="meta"><span class="status ${cls}">${label}</span><span class="tag">${esc(f.onderwerp)}</span><span>${dateLong(f.gemaakt)}</span>${who}</div>
+        <div class="body">${paragraphs(f.bericht)}</div>
+        ${adminBox}
+      </article>`;
+    }).join('');
+  }
+  $('fbForm').addEventListener('submit', async e=>{
+    e.preventDefault();
+    const msg=$('fbMsg'), btn=$('fbSend'), tekst=$('fbBericht').value.trim();
+    if (!tekst){ msg.hidden=false; msg.className='msg err'; msg.textContent='Schrijf eerst je bericht.'; return; }
+    btn.disabled=true; msg.hidden=true;
+    const { error } = await sb.from('feedback').insert({ onderwerp:$('fbOnderwerp').value, bericht:tekst });
+    btn.disabled=false; msg.hidden=false;
+    if (error){ msg.className='msg err'; msg.textContent='Versturen lukte niet. Probeer het opnieuw.'; return; }
+    msg.className='msg ok'; msg.textContent='Bedankt, je bericht is verstuurd naar het bestuur.';
+    $('fbBericht').value=''; loadAll();
+  });
+  $('fbFilter').addEventListener('click', e=>{
+    const b=e.target.closest('[data-f]'); if (!b) return;
+    state.fbFilter=b.dataset.f;
+    $('fbFilter').querySelectorAll('[data-f]').forEach(x=>x.setAttribute('aria-pressed', x===b));
+    renderFeedback();
+  });
+  $('fbList').addEventListener('submit', async e=>{
+    const f=e.target.closest('.fb-admin'); if (!f) return; e.preventDefault();
+    const err=f.querySelector('.msg'), antwoord=f.querySelector('textarea').value.trim(), status=f.querySelector('select').value;
+    const old=state.feedback.find(x=>x.id==f.dataset.fb);
+    const row={ status, antwoord: antwoord||null, beantwoord: antwoord ? (antwoord===(old?.antwoord||'') ? old.beantwoord : new Date().toISOString()) : null };
+    const { error } = await sb.from('feedback').update(row).eq('id', f.dataset.fb);
+    if (error){ err.hidden=false; err.textContent='Opslaan lukte niet.'; return; }
+    loadAll();
+  });
+  let fbDelArmed=null;
+  $('fbList').addEventListener('click', async e=>{
+    const b=e.target.closest('[data-fb-del]'); if (!b) return;
+    if (fbDelArmed!==b.dataset.fbDel){ fbDelArmed=b.dataset.fbDel; b.textContent='Klik nogmaals om te verwijderen'; return; }
+    const { error } = await sb.from('feedback').delete().eq('id', b.dataset.fbDel);
+    fbDelArmed=null; if (!error) loadAll();
+  });
+
   // ---------- Tabbladen ----------
-  const TABS = ['overzicht','mededelingen','agenda','stemmingen','bestuur','contacten','bewoners'];
+  const TABS = ['overzicht','mededelingen','agenda','stemmingen','bestuur','contacten','feedback','bewoners'];
   function showTab(name){
     if (!TABS.includes(name) || (name==='bewoners' && !state.isAdmin)) name='overzicht';
     document.querySelectorAll('[data-panel]').forEach(p=>{ p.hidden = p.dataset.panel!==name; });

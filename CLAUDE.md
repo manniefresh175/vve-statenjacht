@@ -28,10 +28,11 @@ VVE Statenjacht en schrijft meestal Nederlands. Antwoord in het Nederlands, kort
 - `index.html` – inlogscherm + portaal met tabbladen (hash-routing):
   `#overzicht` (foto bovenaan, kaart lopende/laatste stemming, laatste mededelingen, binnenkort),
   `#mededelingen`, `#agenda`, `#stemmingen`, `#bestuur` (Bestuur / Technische commissie / Kascommissie / Overige),
-  `#contacten`, `#bewoners` (alleen beheerder), en de tab MJOP → `mjop.html`.
+  `#contacten`, `#feedback` (bewoners sturen bericht aan bestuur; beheerder ziet alles, zet status en antwoordt),
+  `#bewoners` (alleen beheerder), en de tab MJOP → `mjop.html`.
 - `mjop.html` – MJOP (Overzicht, Planning, Kapitalisatie, Instellingen, Historie) met dezelfde kopbalk/tabs.
 - `assets/statenjacht.jpg` (2000px) en `assets/statenjacht-900.jpg`.
-- `supabase/01-schema.sql`, `supabase/02-stemmingen.sql` – documentatie van het schema.
+- `supabase/01-schema.sql`, `02-stemmingen.sql`, `03-feedback.sql` – documentatie van het schema.
 
 ## Database (public)
 - `profiles` (id, email, naam, rol 'admin'|'lezer', appartement). Nieuwe gebruiker krijgt automatisch rol 'lezer'.
@@ -39,6 +40,8 @@ VVE Statenjacht en schrijft meestal Nederlands. Antwoord in het Nederlands, kort
 - `mededelingen`, `agenda`, `contacten` (groep 'bestuur'|'tc'|'contact', `commissie` = Technische commissie/Kascommissie/Overige).
 - `stemmingen` (titel, toelichting, opties jsonb, sluit) en `stemmen` (pk stemming_id+appartement).
   Eén stem per appartement, openbaar na sluiting (RLS), stemmen alleen via RPC `stem()`; opkomst via `stem_opkomst()`.
+- `feedback` (onderwerp, bericht, status nieuw/in behandeling/afgehandeld, antwoord); afzender via trigger uit profiel.
+  Bewoner ziet alleen eigen berichten; beheerder alles. Geen e-mailmelding (nog niet gebouwd).
 - RLS: ingelogd mag lezen; schrijven alleen als `is_admin()`. Security-definer functies zijn bewust aanroepbaar.
 
 ## Werkwijze
