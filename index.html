@@ -367,7 +367,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
 
   <!-- Stemmingen -->
   <main class="page" data-panel="stemmingen" hidden>
-    <div class="page-head"><div><h1>Stemmingen</h1><p>Je stemt namens je appartement; per appartement telt één stem. Na de sluitingsdatum ziet iedereen de uitslag en wie wat heeft gestemd.</p></div><button class="btn small" id="addPoll" hidden>Stemming aanmaken</button></div>
+    <div class="page-head"><div><h1>Stemmingen</h1><p>Je stemt namens je appartement; per appartement telt één stem en je stem is definitief. Na de sluitingsdatum ziet iedereen de uitslag en wie wat heeft gestemd.</p></div><button class="btn small" id="addPoll" hidden>Stemming aanmaken</button></div>
     <p class="msg" id="noApp" hidden>Je account is nog niet gekoppeld aan een appartement, daarom kun je nog niet stemmen. Vraag het bestuur om dit in te stellen.</p>
     <div id="polls"><p class="empty">Laden…</p></div>
   </main>
@@ -882,14 +882,14 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     const t = state.turnout[p.id]; if (!t) return '';
     return `${t.gestemd} van ${t.appartementen} appartement${t.appartementen==1?'':'en'} ${t.gestemd==1?'heeft':'hebben'} gestemd.`;
   }
-  function resultsHTML(p, votes){
+  function resultsHTML(p, votes, canReset){
     const total = votes.length, counts = p.opties.map(o=>votes.filter(v=>v.optie===o).length), max = Math.max(...counts);
     const bars = p.opties.map((o,i)=>{ const pct = total ? Math.round(counts[i]/total*100) : 0;
       return `<div class="res-row${total && counts[i]===max ? ' win':''}"><span class="lbl">${esc(o)}</span><span class="n">${counts[i]} (${pct}%)</span><span class="bar"><i style="width:${pct}%"></i></span></div>`; }).join('');
     const byApp = (a,b)=>String(a.appartement).localeCompare(String(b.appartement),'nl',{numeric:true});
-    const who = total ? `<details class="voters"><summary>Wie stemde wat</summary>${p.opties.map(o=>{
+    const who = total ? `<details class="voters"${canReset?' open':''}><summary>Wie stemde wat</summary>${p.opties.map(o=>{
         const l = votes.filter(v=>v.optie===o).sort(byApp);
-        return l.length ? `<h4>${esc(o)}</h4><ul>${l.map(v=>`<li>Appartement ${esc(v.appartement)}${v.wie_naam?` · ${esc(v.wie_naam)}`:''}</li>`).join('')}</ul>` : '';
+        return l.length ? `<h4>${esc(o)}</h4><ul>${l.map(v=>`<li>Appartement ${esc(v.appartement)}${v.wie_naam?` · ${esc(v.wie_naam)}`:''}${canReset?` <button type="button" class="btn quiet small" data-reset-vote="${p.id}|${esc(v.appartement)}">Stem intrekken</button>`:''}</li>`).join('')}</ul>` : '';
       }).join('')}</details>` : '';
     return `<div class="results">${bars}</div>${who}`;
   }
@@ -902,15 +902,15 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
       const opn = isOpen(p), mine = myVote(p), votes = state.votes.filter(v=>v.stemming_id===p.id);
       let body;
       if (opn){
-        const canVote = !!state.myApp;
+        const canVote = !!state.myApp && !mine;
         body = `<form class="vote-form" data-poll="${p.id}"><div class="choices" role="radiogroup" aria-label="Keuzes">${p.opties.map(o=>`
             <label class="choice${canVote?'':' ro'}"><input type="radio" name="o${p.id}" value="${esc(o)}" ${mine&&mine.optie===o?'checked':''} ${canVote?'':'disabled'}>${esc(o)}</label>`).join('')}</div>
-          ${canVote?`<div class="vote-row"><button type="submit" class="btn primary">${mine?'Stem wijzigen':'Stem uitbrengen'}</button><span class="msg err" hidden></span></div>`:''}
+          ${canVote?`<div class="vote-row"><button type="submit" class="btn primary">Stem uitbrengen</button><span class="small-print">Let op: je stem is definitief en kan daarna niet meer worden gewijzigd.</span><span class="msg err" hidden></span></div>`:''}
           </form>
-          ${mine?`<p class="my-vote">Appartement ${esc(state.myApp)} heeft gestemd: <strong>${esc(mine.optie)}</strong>${mine.wie_naam?` (door ${esc(mine.wie_naam)})`:''}. Je kunt dit wijzigen tot de sluiting.</p>`
-                : canVote?`<p class="turnout">Appartement ${esc(state.myApp)} heeft nog niet gestemd.</p>`:''}
+          ${mine?`<p class="my-vote"><strong>Bedankt voor je stem!</strong> Appartement ${esc(state.myApp)} heeft gestemd: <strong>${esc(mine.optie)}</strong>${mine.wie_naam?` (door ${esc(mine.wie_naam)})`:''}. Heb je je vergist? <a href="#contact">Neem contact op met het bestuur</a>, dan kan het bestuur je stem intrekken zodat je opnieuw kunt stemmen.</p>`
+                : state.myApp?`<p class="turnout">Appartement ${esc(state.myApp)} heeft nog niet gestemd.</p>`:''}
           <p class="turnout">${turnoutText(p)}</p>
-          ${state.isAdmin && votes.length ? `<details class="voters admin-peek"><summary>Tussenstand (alleen zichtbaar voor beheerders)</summary>${resultsHTML(p, votes)}</details>` : ''}`;
+          ${state.isAdmin && votes.length ? `<details class="voters admin-peek"${openPeek.has(p.id)?' open':''} data-peek="${p.id}"><summary>Tussenstand (alleen zichtbaar voor beheerders)</summary>${resultsHTML(p, votes, true)}</details>` : ''}`;
       } else {
         body = `${resultsHTML(p, votes)}<p class="turnout">${turnoutText(p)}</p>`;
       }
@@ -934,7 +934,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     let line, btn;
     if (!state.myApp){ line = 'Je account is nog niet aan een appartement gekoppeld, daarom kun je nog niet stemmen.'; btn = '<span class="btn">Bekijk stemming</span>'; }
     else if (!mine){ line = `Appartement ${esc(state.myApp)} heeft nog niet gestemd. ${turnoutText(p)}`; btn = '<span class="btn primary">Stem nu</span>'; }
-    else { line = `Appartement ${esc(state.myApp)} stemde <strong>${esc(mine.optie)}</strong>. Wijzigen kan tot de sluiting.`; btn = '<span class="btn">Stem wijzigen</span>'; }
+    else { line = `Bedankt voor je stem! Appartement ${esc(state.myApp)} stemde <strong>${esc(mine.optie)}</strong>.`; btn = '<span class="btn">Bekijk stemming</span>'; }
     return `<a class="vote-item" href="#stemmingen/${p.id}"><div><div class="meta"><span class="status open">Open</span><span>${untilText(p.sluit)} · ${dateTime(p.sluit)}</span></div><h3>${esc(p.titel)}</h3><p class="line">${line}</p></div>${btn}</a>`;
   }
   // Direct naar één stemming springen via #stemmingen/<id>
@@ -951,10 +951,24 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     const err = f.querySelector('.msg'), btn = f.querySelector('button[type=submit]');
     const choice = f.querySelector('input:checked');
     if (!choice){ err.hidden=false; err.textContent='Kies eerst een van de opties.'; return; }
+    if (!confirm(`Je stemt namens appartement ${state.myApp}: "${choice.value}".\n\nJe stem is definitief en kan daarna niet meer worden gewijzigd. Doorgaan?`)) return;
     btn.disabled = true; err.hidden = true;
     const { error } = await sb.rpc('stem', { p_stemming: Number(f.dataset.poll), p_optie: choice.value });
     btn.disabled = false;
-    if (error){ err.hidden=false; err.textContent = /gesloten/i.test(error.message) ? 'Deze stemming is inmiddels gesloten.' : /appartement/i.test(error.message) ? 'Je account is nog niet gekoppeld aan een appartement.' : 'Stemmen lukte niet. Probeer het opnieuw.'; return; }
+    if (error){ err.hidden=false; err.textContent = /al gestemd/i.test(error.message) ? 'Je appartement heeft al gestemd.' : /gesloten/i.test(error.message) ? 'Deze stemming is inmiddels gesloten.' : /appartement/i.test(error.message) ? 'Je account is nog niet gekoppeld aan een appartement.' : 'Stemmen lukte niet. Probeer het opnieuw.'; return; }
+    loadAll();
+  });
+
+  // Beheer: stem intrekken (bij een vergissing), daarna kan het appartement opnieuw stemmen
+  const openPeek = new Set();
+  $('polls').addEventListener('toggle', e=>{ const d=e.target; if (d.dataset?.peek){ d.open ? openPeek.add(Number(d.dataset.peek)) : openPeek.delete(Number(d.dataset.peek)); } }, true);
+  $('polls').addEventListener('click', async e=>{
+    const b=e.target.closest('[data-reset-vote]'); if (!b) return;
+    const [id, app] = b.dataset.resetVote.split('|');
+    if (!confirm(`Stem van appartement ${app} intrekken? Het appartement kan daarna opnieuw stemmen.`)) return;
+    b.disabled = true;
+    const { error } = await sb.from('stemmen').delete().eq('stemming_id', Number(id)).eq('appartement', app);
+    if (error){ b.disabled=false; alert('Intrekken lukte niet. Probeer het opnieuw.'); return; }
     loadAll();
   });
 

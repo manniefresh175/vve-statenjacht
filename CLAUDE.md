@@ -40,7 +40,8 @@ VVE Statenjacht en schrijft meestal Nederlands. Antwoord in het Nederlands, kort
 - `onderdelen`, `plan` (id=1), `historie` – MJOP; schrijven alleen via RPC `opslaan()` (alleen admin).
 - `mededelingen`, `agenda`, `contacten` (groep 'bestuur'|'tc'|'contact', `commissie` = Femur/Technische commissie/Kascommissie/Overige).
 - `stemmingen` (titel, toelichting, opties jsonb, sluit) en `stemmen` (pk stemming_id+appartement).
-  Eén stem per appartement, openbaar na sluiting (RLS), stemmen alleen via RPC `stem()`; opkomst via `stem_opkomst()`.
+  Eén stem per appartement, eenmalig (niet te wijzigen; beheerder kan stem intrekken), openbaar na sluiting (RLS),
+  stemmen alleen via RPC `stem()`; opkomst via `stem_opkomst()`.
 - `feedback` (bericht, onderwerp ongebruikt/default 'Overig', status nieuw/in behandeling/afgehandeld, antwoord); afzender via trigger uit profiel.
   Bewoner ziet alleen eigen berichten; beheerder alles. Geen e-mailmelding (nog niet gebouwd).
 - `contact_groepen` (naam, volgorde): volgorde van groepen op Bestuur en commissies; beheerder via knop 'Groepen ordenen'.
