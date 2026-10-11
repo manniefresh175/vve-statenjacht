@@ -330,7 +330,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     <a href="#documenten" data-tab="documenten">Documenten</a>
     <a href="#bestuur" data-tab="bestuur">Bestuur en commissies</a>
     <a href="#bewoners" data-tab="bewoners" id="tabBewoners" hidden>Bewoners</a>
-    <a href="/mjop.html">MJOP</a>
+    <a href="/mjop.html" id="tabMjop" hidden>MJOP</a>
     <a href="#contact" data-tab="contact">Contact<span class="tab-count" id="fbDot" hidden></span></a>
   </nav>
 
@@ -604,7 +604,9 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     $('greeting').textContent = h<6 ? 'Goedenacht' : h<12 ? 'Goedemorgen' : h<18 ? 'Goedemiddag' : 'Goedenavond';
     const { data:prof } = await sb.from('profiles').select('rol,naam,appartement').eq('id', session.user.id).maybeSingle();
     state.isAdmin = prof?.rol === 'admin';
-    $('role').textContent = state.isAdmin ? 'Beheerder' : 'Bewoner';
+    const rol = prof?.rol || 'lezer';
+    $('role').textContent = ROL_NAAM[rol] || 'Bewoner';
+    $('tabMjop').hidden = !(rol==='admin' || rol==='tc');
     state.myApp = (prof?.appartement||'').trim() || null;
     $('addNews').hidden = $('addEvent').hidden = $('addPerson').hidden = $('addPoll').hidden = $('addDoc').hidden = $('orderGroups').hidden = $('tabBewoners').hidden = !state.isAdmin;
     showTab(hashTab());
@@ -1039,6 +1041,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
 
   // ---------- Bewoners (beheerder) ----------
   let myId = null;
+  const ROL_NAAM = { lezer:'Bewoner', tc:'Technische commissie', admin:'Beheerder' };
   function renderResidents(){
     const list = [...state.residents].sort((a,b)=>String(a.appartement||'~').localeCompare(String(b.appartement||'~'),'nl',{numeric:true}) || String(a.email).localeCompare(String(b.email)));
     const linked = new Set(list.map(r=>(r.appartement||'').trim()).filter(Boolean)).size;
@@ -1048,9 +1051,9 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
         <tr data-res="${r.id}"><td class="mail">${esc(r.email)}</td>
           <td><input class="naam" value="${esc(r.naam||'')}" maxlength="80" aria-label="Naam van ${esc(r.email)}"></td>
           <td><input class="app" value="${esc(r.appartement||'')}" maxlength="20" placeholder="nr." aria-label="Appartement van ${esc(r.email)}"></td>
-          <td><select class="rol" aria-label="Rol van ${esc(r.email)}" ${r.id===myId?'disabled title="Je eigen rol kun je niet wijzigen"':''}><option value="lezer" ${r.rol!=='admin'?'selected':''}>Bewoner</option><option value="admin" ${r.rol==='admin'?'selected':''}>Beheerder</option></select></td>
+          <td><select class="rol" aria-label="Rol van ${esc(r.email)}" ${r.id===myId?'disabled title="Je eigen rol kun je niet wijzigen"':''}>${Object.entries(ROL_NAAM).map(([v,t])=>`<option value="${v}" ${(r.rol||'lezer')===v?'selected':''}>${t}</option>`).join('')}</select></td>
           <td><span class="saved" hidden>Opgeslagen</span></td></tr>`).join('')}</tbody></table>
-      <p class="small-print" style="margin-top:12px">Een beheerder kan alles op de site aanpassen: mededelingen, agenda, stemmingen, documenten, personen, het MJOP en deze lijst. Maak alleen bestuursleden beheerder.</p>`;
+      <p class="small-print" style="margin-top:12px">Beheerder: kan alles op de site aanpassen; alleen voor het bestuur. Technische commissie: kan daarnaast het MJOP bekijken en wijzigen. Bewoner: kan alles lezen behalve het MJOP.</p>`;
   }
   $('residents').addEventListener('change', async e=>{
     const tr = e.target.closest('tr[data-res]'); if (!tr) return;
@@ -1058,13 +1061,14 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     const ok = tr.querySelector('.saved'), sel = tr.querySelector('.rol'), r0 = state.residents.find(x=>x.id===tr.dataset.res);
     if (e.target===sel){
       const wie = r0?.naam || r0?.email || 'Dit account';
-      const msg = sel.value==='admin' ? `<strong>${esc(wie)}</strong> kan dan alles op de site aanpassen.` : `<strong>${esc(wie)}</strong> kan dan niets meer aanpassen.`;
-      if (!await ask(sel.value==='admin' ? 'Beheerder maken?' : 'Terug naar bewoner?', msg, sel.value==='admin' ? 'Ja, beheerder maken' : 'Ja, terugzetten')){ sel.value = r0?.rol==='admin' ? 'admin' : 'lezer'; return; }
+      const uitleg = { admin:'kan dan alles op de site aanpassen.', tc:'kan dan het MJOP bekijken en wijzigen. Verder is het een gewone bewoner.', lezer:'kan dan alles lezen behalve het MJOP, en niets aanpassen.' };
+      const msg = `<strong>${esc(wie)}</strong> ${uitleg[sel.value]}`;
+      if (!await ask(`Rol wijzigen naar ${ROL_NAAM[sel.value]}?`, msg, 'Ja, wijzigen')){ sel.value = r0?.rol || 'lezer'; return; }
       row.rol = sel.value;
     }
     const { error } = await sb.from('profiles').update(row).eq('id', tr.dataset.res);
     ok.hidden=false; ok.textContent = error ? (/minstens/i.test(error.message) ? 'Er moet minstens één beheerder blijven' : 'Opslaan mislukt') : 'Opgeslagen'; ok.style.color = error ? 'var(--neg)' : '';
-    if (error && row.rol){ sel.value = r0?.rol==='admin' ? 'admin' : 'lezer'; }
+    if (error && row.rol){ sel.value = r0?.rol || 'lezer'; }
     if (!error){ const r = state.residents.find(x=>x.id===tr.dataset.res); Object.assign(r,row);
       const { data:{ session } } = await sb.auth.getSession();
       if (session && tr.dataset.res===session.user.id){ state.myApp = row.appartement; renderPolls(); } }

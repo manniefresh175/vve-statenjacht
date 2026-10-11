@@ -36,9 +36,10 @@ VVE Statenjacht en schrijft meestal Nederlands. Antwoord in het Nederlands, kort
 - `supabase/01-schema.sql`, `02-stemmingen.sql`, `03-feedback.sql`, `04-documenten.sql`, `05-contact-groepen.sql` – documentatie van het schema.
 
 ## Database (public)
-- `profiles` (id, email, naam, rol 'admin'|'lezer', appartement). Nieuwe gebruiker krijgt automatisch rol 'lezer'.
+- `profiles` (id, email, naam, rol 'admin'|'tc'|'lezer', appartement). 'tc' = Technische commissie (MJOP lezen+wijzigen). Nieuwe gebruiker krijgt automatisch rol 'lezer'.
   Rol wijzigen: tabblad Bewoners → kolom Rol (eigen rol niet; laatste beheerder beschermd door trigger).
-- `onderdelen`, `plan` (id=1), `historie` – MJOP; schrijven alleen via RPC `opslaan()` (alleen admin).
+- `onderdelen`, `plan` (id=1), `historie` – MJOP; lezen én schrijven (RPC `opslaan()`) alleen als `mag_mjop()` (admin of tc).
+  Bewoners zien het MJOP-tabblad niet; mjop.html stuurt hen door naar het overzicht.
 - `mededelingen`, `agenda`, `contacten` (groep 'bestuur'|'tc'|'contact', `commissie` = Femur/Technische commissie/Kascommissie/Overige).
 - `stemmingen` (titel, toelichting, opties jsonb, sluit) en `stemmen` (pk stemming_id+appartement).
   Eén stem per appartement, eenmalig (niet te wijzigen; beheerder kan stem intrekken), openbaar na sluiting (RLS),

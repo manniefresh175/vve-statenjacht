@@ -144,3 +144,8 @@ grant  execute on function public.is_admin() to authenticated;
 
 -- 11 oktober 2026, migratie 'laatste_beheerder_beschermen': trigger profiles_laatste_beheerder voorkomt dat de
 -- laatste beheerder (rol 'admin') wordt teruggezet. Rol wijzigen gaat via het tabblad Bewoners (kolom Rol).
+
+-- 11 oktober 2026, migraties 'mjop_alleen_bestuur_en_tc' en 'mjop_tc_mag_wijzigen':
+-- profiles.rol mag nu 'admin' | 'tc' | 'lezer' ('tc' = Technische commissie).
+-- Functie mag_mjop() = rol in ('admin','tc'). Lezen van onderdelen/plan/historie alleen als mag_mjop();
+-- opslaan() controleert ook mag_mjop() (bestuur én technische commissie mogen het MJOP wijzigen).

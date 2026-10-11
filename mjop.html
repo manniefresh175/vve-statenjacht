@@ -887,13 +887,16 @@ dialog .field input{width:100%}
     if (!session){ location.replace('/'); return; }   // inloggen gebeurt op het dashboard
     if (needPassword){ $('app').hidden=true; $('login').hidden=false; showPwCard(linkType==='recovery' ? 'Nieuw wachtwoord' : 'Welkom! Kies je wachtwoord', false); return; }
     if (started) return; started=true;
+    const { data:prof } = await sb.from('profiles').select('rol').eq('id', session.user.id).maybeSingle();
+    const rol = prof?.rol || 'lezer';
+    // Alleen bestuur (beheerder) en technische commissie hebben toegang tot het MJOP
+    if (rol!=='admin' && rol!=='tc'){ location.replace('/#overzicht'); return; }
     $('login').hidden=true; $('app').hidden=false;
     $('who').textContent = session.user.email;
     state.db = sb; state.userId = session.user.id;
-    const { data:prof } = await sb.from('profiles').select('rol').eq('id', session.user.id).maybeSingle();
-    state.canWrite = prof?.rol === 'admin';
-    $('role').textContent = state.canWrite ? 'Beheerder' : 'Bewoner';
-    $('tabBewoners').hidden = !state.canWrite;
+    state.canWrite = true;   // de database controleert dit nogmaals bij opslaan
+    $('role').textContent = rol==='admin' ? 'Beheerder' : 'Technische commissie';
+    $('tabBewoners').hidden = rol!=='admin';
     try{ await loadAll(); }catch(e){ $('status').textContent='De gegevens konden niet geladen worden. Ververs de pagina.'; render(); }
   }
 
