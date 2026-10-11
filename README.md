@@ -2,7 +2,7 @@
 
 Website van VVE Statenjacht, live op https://vve-statenjacht.nl
 
-- **Hosting:** Netlify (publiceert automatisch bij elke push naar `main`)
+- **Hosting:** GitHub Pages (gratis, publiceert automatisch bij elke push naar `main`)
 - **Login en database:** Supabase (project `vve-statenjacht`, EU)
 - **Rollen:** iedereen met een uitnodiging kan lezen; beheerders kunnen wijzigen.
   Opslaan gaat altijd via de databasefunctie `opslaan`, die de rechten controleert en een regel in de historie schrijft.
@@ -12,7 +12,7 @@ Website van VVE Statenjacht, live op https://vve-statenjacht.nl
 - `index.html` – inloggen en dashboard (mededelingen, agenda, samenvatting MJOP)
 - `mjop.html` – de MJOP Planner (planning, kapitalisatie, instellingen, historie)
 - `assets/` – foto van het gebouw
-- `netlify.toml` – Netlify-instellingen
+- `CNAME` – de domeinnaam voor GitHub Pages
 - `supabase/01-schema.sql` – tabellen, beveiligingsregels en de opslaan-functie (al uitgevoerd)
 
 ## Nieuwe bewoner toegang geven
