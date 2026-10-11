@@ -240,11 +240,33 @@ dialog .field input{width:100%}
   <form class="login-card" id="loginForm">
     <div class="eyebrow">VVE Statenjacht</div>
     <h1>Inloggen</h1>
-    <p>Vul je e-mailadres in. Je krijgt een e-mail met een link waarmee je direct bent ingelogd.</p>
-    <div class="field"><label for="loginEmail">E-mailadres</label><input id="loginEmail" type="email" autocomplete="email" required placeholder="naam@voorbeeld.nl"></div>
-    <button type="submit" class="primary" id="loginBtn">Stuur inloglink</button>
+    <div class="field"><label for="loginEmail">E-mailadres</label><input id="loginEmail" type="email" autocomplete="username" required placeholder="naam@voorbeeld.nl"></div>
+    <div class="field"><label for="loginPw">Wachtwoord</label><input id="loginPw" type="password" autocomplete="current-password" required></div>
+    <button type="submit" class="primary" id="loginBtn">Inloggen</button>
     <p class="login-msg" id="loginMsg" hidden></p>
+    <p style="font-size:13px"><a href="#" id="toForgot">Wachtwoord vergeten?</a></p>
     <p style="font-size:12px">Nog geen toegang? Vraag het bestuur om een uitnodiging.</p>
+  </form>
+
+  <form class="login-card" id="forgotForm" hidden>
+    <div class="eyebrow">VVE Statenjacht</div>
+    <h1>Wachtwoord vergeten</h1>
+    <p>Vul je e-mailadres in. Je krijgt een e-mail met een link om een nieuw wachtwoord te kiezen.</p>
+    <div class="field"><label for="forgotEmail">E-mailadres</label><input id="forgotEmail" type="email" autocomplete="email" required></div>
+    <button type="submit" class="primary" id="forgotBtn">Stuur e-mail</button>
+    <p class="login-msg" id="forgotMsg" hidden></p>
+    <p style="font-size:13px"><a href="#" id="toLogin">Terug naar inloggen</a></p>
+  </form>
+
+  <form class="login-card" id="pwForm" hidden>
+    <div class="eyebrow">VVE Statenjacht</div>
+    <h1 id="pwTitle">Kies je wachtwoord</h1>
+    <p id="pwIntro">Kies een wachtwoord van minimaal 8 tekens. Daarmee log je voortaan in met je e-mailadres.</p>
+    <div class="field"><label for="pw1">Nieuw wachtwoord</label><input id="pw1" type="password" autocomplete="new-password" minlength="8" required></div>
+    <div class="field"><label for="pw2">Herhaal wachtwoord</label><input id="pw2" type="password" autocomplete="new-password" minlength="8" required></div>
+    <button type="submit" class="primary" id="pwBtn">Wachtwoord opslaan</button>
+    <p class="login-msg" id="pwMsg" hidden></p>
+    <p style="font-size:13px" id="pwCancelWrap" hidden><a href="#" id="pwCancel">Annuleren</a></p>
   </form>
 </div>
 
@@ -254,7 +276,7 @@ dialog .field input{width:100%}
       <div class="eyebrow">Statenjacht · Meerjarenonderhoudsplan</div>
       <h1>MJOP Planner</h1>
     </div>
-    <div class="userbox"><span id="who"></span><span class="role" id="role"></span><button type="button" id="logoutBtn">Uitloggen</button></div>
+    <div class="userbox"><span id="who"></span><span class="role" id="role"></span><button type="button" id="pwChangeBtn">Wachtwoord wijzigen</button><button type="button" id="logoutBtn">Uitloggen</button></div>
   </header>
 
   <div class="toolbar">
@@ -805,6 +827,9 @@ dialog .field input{width:100%}
   // ---------- opstarten: inloggen en gegevens uit Supabase ----------
   const SUPABASE_URL = 'https://tnqjubjtsdwulwjbbhfp.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_ctC2kV3NYxnioBKKblrBtg_IdUzyVvQ';   // publieke sleutel, bedoeld voor de browser
+  // Kwam iemand binnen via een uitnodiging of een 'wachtwoord vergeten'-link? Lees dat voordat Supabase de link verwerkt.
+  const linkType = new URLSearchParams(location.hash.slice(1)).get('type');
+  let needPassword = linkType === 'invite' || linkType === 'recovery';
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   const mapPlan = r => ({ startjaar:r.startjaar, jaren:r.looptijd, indexatie:Number(r.indexatie)||0, beginsaldo:Number(r.beginsaldo)||0, reservering:Number(r.reservering)||0, reserveringen:r.reserveringen||{} });
@@ -827,7 +852,8 @@ dialog .field input{width:100%}
 
   let started=false;
   async function start(session){
-    if (!session){ $('app').hidden=true; $('login').hidden=false; return; }
+    if (!session){ $('app').hidden=true; $('login').hidden=false; showCard('loginForm'); return; }
+    if (needPassword){ $('app').hidden=true; $('login').hidden=false; showPwCard(linkType==='recovery' ? 'Nieuw wachtwoord' : 'Welkom! Kies je wachtwoord', false); return; }
     if (started) return; started=true;
     $('login').hidden=true; $('app').hidden=false;
     $('who').textContent = session.user.email;
@@ -838,30 +864,61 @@ dialog .field input{width:100%}
     try{ await loadAll(); }catch(e){ $('status').textContent='De gegevens konden niet geladen worden. Ververs de pagina.'; render(); }
   }
 
+  function showCard(id){ ['loginForm','forgotForm','pwForm'].forEach(c=>{ $(c).hidden = c!==id; }); }
+  function showMsg(id, text, err){ const m=$(id); m.hidden=false; m.className='login-msg'+(err?' err':''); m.textContent=text; }
+  function showPwCard(title, canCancel){
+    $('pwTitle').textContent=title; $('pw1').value=''; $('pw2').value=''; $('pwMsg').hidden=true;
+    $('pwCancelWrap').hidden=!canCancel; showCard('pwForm'); $('pw1').focus();
+  }
+  $('toForgot').onclick = e=>{ e.preventDefault(); $('forgotEmail').value=$('loginEmail').value; $('forgotMsg').hidden=true; showCard('forgotForm'); };
+  $('toLogin').onclick  = e=>{ e.preventDefault(); showCard('loginForm'); };
+
   $('loginForm').addEventListener('submit', async e=>{
     e.preventDefault();
-    const email=$('loginEmail').value.trim(), msg=$('loginMsg');
     $('loginBtn').disabled=true; $('loginBtn').textContent='Bezig…';
-    const { error } = await sb.auth.signInWithOtp({ email, options:{ shouldCreateUser:false, emailRedirectTo: location.origin } });
-    $('loginBtn').disabled=false; $('loginBtn').textContent='Stuur inloglink';
-    msg.hidden=false;
-    if (error){
-      msg.className='login-msg err';
-      msg.textContent = /signups|not allowed|not found/i.test(error.message) ? 'Dit e-mailadres heeft nog geen toegang. Vraag het bestuur om een uitnodiging.'
-        : /rate|seconds/i.test(error.message) ? 'Je hebt net al een link aangevraagd. Wacht een minuut en probeer het opnieuw.'
-        : 'Er ging iets mis bij het versturen. Probeer het later opnieuw.';
-    } else {
-      msg.className='login-msg';
-      msg.textContent = `We hebben een inloglink gestuurd naar ${email}. Open de e-mail en klik op de link. Kijk ook in je spammap.`;
-    }
+    const { error } = await sb.auth.signInWithPassword({ email:$('loginEmail').value.trim(), password:$('loginPw').value });
+    $('loginBtn').disabled=false; $('loginBtn').textContent='Inloggen';
+    if (error) showMsg('loginMsg', /invalid/i.test(error.message) ? 'E-mailadres of wachtwoord klopt niet. Nog geen wachtwoord? Kies dan "Wachtwoord vergeten?".'
+      : /rate|many/i.test(error.message) ? 'Te veel pogingen. Wacht even en probeer het opnieuw.' : 'Inloggen lukte niet. Probeer het later opnieuw.', true);
   });
+
+  $('forgotForm').addEventListener('submit', async e=>{
+    e.preventDefault();
+    const email=$('forgotEmail').value.trim();
+    $('forgotBtn').disabled=true;
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin });
+    $('forgotBtn').disabled=false;
+    if (error && /rate|seconds/i.test(error.message)) showMsg('forgotMsg','Je hebt net al een e-mail aangevraagd. Wacht een minuut en probeer het opnieuw.',true);
+    else showMsg('forgotMsg', `Als ${email} toegang heeft, staat er binnen een paar minuten een e-mail in je inbox. Kijk ook in je spammap.`);
+  });
+
+  $('pwForm').addEventListener('submit', async e=>{
+    e.preventDefault();
+    const a=$('pw1').value, b=$('pw2').value;
+    if (a.length<8) return showMsg('pwMsg','Gebruik minimaal 8 tekens.',true);
+    if (a!==b) return showMsg('pwMsg','De twee wachtwoorden zijn niet hetzelfde.',true);
+    $('pwBtn').disabled=true;
+    const { error } = await sb.auth.updateUser({ password:a });
+    $('pwBtn').disabled=false;
+    if (error) return showMsg('pwMsg', /same|different/i.test(error.message) ? 'Kies een ander wachtwoord dan je huidige.' : /weak|short/i.test(error.message) ? 'Dit wachtwoord is te zwak. Kies een langer wachtwoord.' : 'Opslaan lukte niet. Probeer het opnieuw.', true);
+    needPassword=false;
+    history.replaceState(null,'',location.pathname);
+    if (started){ $('login').hidden=true; $('app').hidden=false; }
+    else { const { data } = await sb.auth.getSession(); start(data.session); }
+  });
+  $('pwCancel').onclick = e=>{ e.preventDefault(); $('login').hidden=true; $('app').hidden=false; };
+  $('pwChangeBtn').onclick = ()=>{ $('app').hidden=true; $('login').hidden=false; showPwCard('Wachtwoord wijzigen', true); };
+
   $('logoutBtn').onclick = async ()=>{ await sb.auth.signOut(); location.replace(location.origin); };
 
   // Bij terugkeren naar het tabblad de nieuwste gegevens ophalen (niet tijdens wijzigen)
   document.addEventListener('visibilitychange', ()=>{ if (!document.hidden && started && !state.editMode) loadAll().catch(()=>{}); });
 
   fillSettings(); render();
-  sb.auth.onAuthStateChange((event, session)=>{ if (session) start(session); else if (event==='SIGNED_OUT') { started=false; start(null); } });
+  sb.auth.onAuthStateChange((event, session)=>{
+    if (event==='PASSWORD_RECOVERY') needPassword=true;
+    if (session) start(session); else if (event==='SIGNED_OUT') { started=false; start(null); }
+  });
   sb.auth.getSession().then(({data})=>start(data.session));
 })();
 </script>
