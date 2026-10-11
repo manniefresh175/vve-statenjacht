@@ -170,17 +170,15 @@ dialog h2{font-size:22px}
 @media (max-width:520px){.person{grid-template-columns:48px minmax(0,1fr)}.person .reach{grid-column:2}.contact{grid-template-columns:1fr}.contact .reach{text-align:left}}
 /* Stemmingen */
 .tab-count{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;margin-left:7px;border-radius:10px;background:var(--frame);color:#fff;font-size:12px;font-family:var(--f-body);font-weight:600}
-#voteBanner{display:flex;flex-direction:column;gap:12px;margin-top:28px}
+#voteBanner{margin-top:44px}
 #voteBanner:empty{display:none}
-.vote-banner{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding:18px 22px;border-radius:12px;background:var(--surface);border-left:5px solid var(--frame);box-shadow:0 10px 30px -22px rgba(20,25,30,.5);text-decoration:none;color:var(--ink)}
-.vote-banner.done{border-left-color:var(--sky)}
-.vote-banner.closed{border-left-color:var(--river)}
-.vote-banner > div{display:flex;flex-direction:column;gap:3px;min-width:0}
-.vote-banner .kicker{font-size:13px;font-weight:600;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.vote-banner strong{display:block;font-family:var(--f-display);font-size:19px}
-.vote-banner .line{color:var(--muted);font-size:15px}
-.vote-banner .line b{color:var(--ink)}
-.vote-banner:hover .btn:not(.primary){border-color:var(--sky);color:var(--sky)}
+.vote-item{display:flex;justify-content:space-between;align-items:center;gap:12px 24px;flex-wrap:wrap;padding:20px 0;border-bottom:1px solid var(--line);text-decoration:none;color:var(--ink)}
+.vote-item > div{display:flex;flex-direction:column;gap:8px;min-width:0}
+.vote-item .meta{font-size:14px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.vote-item h3{font-size:21px;font-weight:700}
+.vote-item .line{color:var(--ink)}
+.vote-item:hover h3{color:var(--sky)}
+.vote-item:hover .btn:not(.primary){border-color:var(--sky);color:var(--sky)}
 .poll.flash{animation:flash 1.6s ease-out}
 @keyframes flash{from{background:var(--sky-soft)}to{background:transparent}}
 .poll{scroll-margin-top:16px}
@@ -792,26 +790,17 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     // Openstaande stemmingen waar dit appartement nog niet heeft gestemd
     const todo = state.myApp ? open.filter(p=>!myVote(p)) : [];
     $('voteDot').hidden = !todo.length; $('voteDot').textContent = todo.length;
-    // Overzicht: alle lopende stemmingen; zijn die er niet, dan de laatst gesloten stemming (tot 30 dagen na sluiting)
-    const recent = closed.filter(p=>new Date() - new Date(p.sluit) < 30*864e5).slice(0,1);
-    $('voteBanner').innerHTML = (open.length ? open : recent).map(pollCardHTML).join('');
+    // Overzicht: alleen lopende stemmingen, als sectie zoals mededelingen en agenda; niets open = niets tonen
+    $('voteBanner').innerHTML = open.length ? `<section aria-labelledby="homeVoteTitle"><div class="col-head"><h2 id="homeVoteTitle">${open.length===1?'Lopende stemming':'Lopende stemmingen'}</h2><a class="see-all" href="#stemmingen">Alle stemmingen</a></div>${open.map(pollCardHTML).join('')}</section>` : '';
     if (pendingPoll) focusPoll();
   }
   function pollCardHTML(p){
-    const opn = isOpen(p), mine = myVote(p), t = turnoutText(p);
-    let cls = '', line, btn;
-    if (opn && !state.myApp){ line = 'Je account is nog niet aan een appartement gekoppeld, daarom kun je nog niet stemmen.'; btn = '<span class="btn">Bekijk stemming</span>'; }
-    else if (opn && !mine){ line = `Appartement ${esc(state.myApp)} heeft nog niet gestemd. ${t}`; btn = '<span class="btn primary">Stem nu</span>'; }
-    else if (opn){ cls = ' done'; line = `Appartement ${esc(state.myApp)} stemde <b>${esc(mine.optie)}</b>. Wijzigen kan tot de sluiting.`; btn = '<span class="btn">Stem wijzigen</span>'; }
-    else {
-      cls = ' closed';
-      const votes = state.votes.filter(v=>v.stemming_id===p.id), counts = p.opties.map(o=>votes.filter(v=>v.optie===o).length), max = Math.max(0,...counts);
-      const winners = p.opties.filter((o,i)=>votes.length && counts[i]===max);
-      line = !votes.length ? 'Er is niet gestemd.' : winners.length===1 ? `Uitslag: <b>${esc(winners[0])}</b> (${max} van ${votes.length} stemmen).` : `Uitslag: gelijke stand tussen ${winners.map(w=>`<b>${esc(w)}</b>`).join(' en ')}.`;
-      btn = '<span class="btn">Bekijk uitslag</span>';
-    }
-    const kicker = opn ? `<span class="status open">Open</span>Stemming · ${untilText(p.sluit)}` : `<span class="status closed">Gesloten</span>Stemming · gesloten op ${dateTime(p.sluit)}`;
-    return `<a class="vote-banner${cls}" href="#stemmingen/${p.id}"><div><span class="kicker">${kicker}</span><strong>${esc(p.titel)}</strong><span class="line">${line}</span></div>${btn}</a>`;
+    const mine = myVote(p);
+    let line, btn;
+    if (!state.myApp){ line = 'Je account is nog niet aan een appartement gekoppeld, daarom kun je nog niet stemmen.'; btn = '<span class="btn">Bekijk stemming</span>'; }
+    else if (!mine){ line = `Appartement ${esc(state.myApp)} heeft nog niet gestemd. ${turnoutText(p)}`; btn = '<span class="btn primary">Stem nu</span>'; }
+    else { line = `Appartement ${esc(state.myApp)} stemde <strong>${esc(mine.optie)}</strong>. Wijzigen kan tot de sluiting.`; btn = '<span class="btn">Stem wijzigen</span>'; }
+    return `<a class="vote-item" href="#stemmingen/${p.id}"><div><div class="meta"><span class="status open">Open</span><span>${untilText(p.sluit)} · ${dateTime(p.sluit)}</span></div><h3>${esc(p.titel)}</h3><p class="line">${line}</p></div>${btn}</a>`;
   }
   // Direct naar één stemming springen via #stemmingen/<id>
   let pendingPoll = null;

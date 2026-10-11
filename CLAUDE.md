@@ -26,7 +26,7 @@ VVE Statenjacht en schrijft meestal Nederlands. Antwoord in het Nederlands, kort
 
 ## Bestanden
 - `index.html` – inlogscherm + portaal met tabbladen (hash-routing):
-  `#overzicht` (foto bovenaan, kaart lopende/laatste stemming, laatste mededelingen, binnenkort),
+  `#overzicht` (foto bovenaan, sectie Lopende stemming alleen als er iets open is, laatste mededelingen, binnenkort),
   `#mededelingen`, `#agenda`, `#stemmingen`, `#bestuur` (Bestuur / Technische commissie / Kascommissie / Overige),
   `#contact` (bewoners sturen bericht aan bestuur, alleen tekst; beheerder ziet alles, zet status en antwoordt;
   tabel `feedback`). Het tabblad Contactpersonen is op 11-10-2026 verwijderd.
