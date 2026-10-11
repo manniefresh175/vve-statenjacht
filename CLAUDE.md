@@ -26,7 +26,7 @@ VVE Statenjacht en schrijft meestal Nederlands. Antwoord in het Nederlands, kort
 
 ## Bestanden
 - `index.html` – inlogscherm + portaal met tabbladen (hash-routing):
-  `#overzicht` (foto links, rechts: kaart lopende/laatste stemming, laatste mededelingen, binnenkort),
+  `#overzicht` (foto bovenaan, kaart lopende/laatste stemming, laatste mededelingen, binnenkort),
   `#mededelingen`, `#agenda`, `#stemmingen`, `#bestuur` (Bestuur / Technische commissie / Kascommissie / Overige),
   `#contacten`, `#bewoners` (alleen beheerder), en de tab MJOP → `mjop.html`.
 - `mjop.html` – MJOP (Overzicht, Planning, Kapitalisatie, Instellingen, Historie) met dezelfde kopbalk/tabs.
