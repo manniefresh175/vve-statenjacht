@@ -19,11 +19,23 @@ img{max-width:100%}
 .login-card button{height:42px;font-size:15px}
 .login-msg{font-size:14px;border-radius:8px;padding:10px 12px;background:var(--chip);color:var(--fg)}
 .login-msg.err{background:var(--neg-bg);color:var(--neg)}
-.back{display:inline-block;margin-bottom:6px;font-size:13px;font-weight:600;color:var(--accent);text-decoration:none}
-.back:hover{text-decoration:underline}
-.userbox{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
-.userbox .role{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;background:var(--chip);border-radius:4px;padding:2px 7px}
-.userbox button{height:32px;padding:0 12px;font-size:13px}
+/* Kopbalk en tabbladen, gelijk aan de rest van de site */
+.site-chrome{display:none;background:var(--surface);border-bottom:1px solid var(--line);font-family:var(--f-body)}
+body:has(#app:not([hidden])) .site-chrome{display:block}
+.site-top{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px clamp(16px,4vw,48px)}
+.brand{white-space:nowrap;font-family:var(--f-display);font-weight:700;font-size:18px;color:var(--fg);text-decoration:none}
+.brand i{font-style:normal;display:inline-block;width:10px;height:10px;background:#c4672f;margin-right:8px;vertical-align:1px}
+.userbox{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--muted);flex-wrap:wrap;justify-content:flex-end}
+.userbox .role{font-size:12px;font-weight:600;color:#7b3526;border:1px solid rgba(123,53,38,.4);border-radius:20px;padding:1px 9px;margin-right:6px}
+.userbox button{height:34px;padding:0 8px;font-size:14px;font-weight:600;border:0;background:transparent;color:var(--muted)}
+.userbox button:hover{color:var(--accent)}
+.site-tabs{display:flex;gap:2px;padding:0 clamp(8px,4vw,40px);overflow-x:auto;scrollbar-width:none}
+.site-tabs::-webkit-scrollbar{display:none}
+.site-tabs a{flex:none;display:flex;align-items:center;height:50px;padding:0 12px;font-family:var(--f-display);font-weight:600;font-size:15px;color:var(--muted);text-decoration:none;border-bottom:3px solid transparent}
+.site-tabs a:hover{color:var(--fg)}
+.site-tabs a[aria-current="page"]{color:var(--fg);border-bottom-color:#c4672f}
+@media (prefers-color-scheme: dark){.userbox .role{color:#d98a74;border-color:rgba(217,138,116,.4)}}
+@media (max-width:640px){#who{display:none}.site-top{padding-block:10px}}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -272,14 +284,28 @@ dialog .field input{width:100%}
   </form>
 </div>
 
+<!-- Zelfde kopbalk en tabbladen als de rest van de site -->
+<div class="site-chrome">
+  <div class="site-top">
+    <a class="brand" href="/#overzicht"><i aria-hidden="true"></i>VVE Statenjacht</a>
+    <div class="userbox"><span class="role" id="role"></span><span id="who"></span><button type="button" id="pwChangeBtn">Wachtwoord wijzigen</button><button type="button" id="logoutBtn">Uitloggen</button></div>
+  </div>
+  <nav class="site-tabs" aria-label="Onderdelen">
+    <a href="/#overzicht">Overzicht</a>
+    <a href="/#mededelingen">Mededelingen</a>
+    <a href="/#agenda">Agenda</a>
+    <a href="/#bestuur">Bestuur en commissies</a>
+    <a href="/#contacten">Contactpersonen</a>
+    <a href="/mjop.html" aria-current="page">MJOP Planner</a>
+  </nav>
+</div>
+
 <div class="wrap" id="app" hidden>
   <header>
     <div>
-      <a href="/" class="back">← Dashboard</a>
       <div class="eyebrow">Statenjacht · Meerjarenonderhoudsplan</div>
       <h1>MJOP Planner</h1>
     </div>
-    <div class="userbox"><span id="who"></span><span class="role" id="role"></span><button type="button" id="pwChangeBtn">Wachtwoord wijzigen</button><button type="button" id="logoutBtn">Uitloggen</button></div>
   </header>
 
   <div class="toolbar">
@@ -925,6 +951,11 @@ dialog .field input{width:100%}
   });
   sb.auth.getSession().then(({data})=>start(data.session));
 })();
+</script>
+<script>
+// Op een smal scherm het actieve tabblad (MJOP Planner) in beeld schuiven zodra de balk zichtbaar wordt
+(()=>{ const nav=document.querySelector('.site-tabs');
+  new ResizeObserver(()=>{ if (nav.clientWidth) nav.scrollLeft = nav.scrollWidth; }).observe(nav); })();
 </script>
 </body>
 </html>

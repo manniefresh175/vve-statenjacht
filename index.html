@@ -85,8 +85,6 @@ input:focus,textarea:focus{outline:2px solid var(--sky);outline-offset:0;border-
 .tabs a{flex:none;display:flex;align-items:center;height:50px;padding:0 12px;font-family:var(--f-display);font-weight:600;font-size:15px;color:var(--muted);text-decoration:none;border-bottom:3px solid transparent}
 .tabs a:hover{color:var(--ink)}
 .tabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--frame)}
-.tabs a.ext{margin-left:auto;color:var(--sky)}
-.tabs a.ext::after{content:"→";margin-left:6px}
 
 /* ---------- Pagina per tabblad ---------- */
 main.page{max-width:900px;padding-top:clamp(28px,5vw,48px)}
@@ -228,7 +226,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     <a href="#agenda" data-tab="agenda">Agenda</a>
     <a href="#bestuur" data-tab="bestuur">Bestuur en commissies</a>
     <a href="#contacten" data-tab="contacten">Contactpersonen</a>
-    <a href="/mjop.html" class="ext">MJOP Planner</a>
+    <a href="/mjop.html">MJOP Planner</a>
   </nav>
 
   <div class="load-err" id="loadErr" hidden>De gegevens konden niet worden geladen. Ververs de pagina of probeer het later opnieuw.</div>
