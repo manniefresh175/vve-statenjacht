@@ -9,7 +9,9 @@ Website van VVE Statenjacht, live op https://vve-statenjacht.nl
 
 ## Bestanden
 
-- `index.html` – de app (MJOP-planning, kapitalisatie, instellingen, historie)
+- `index.html` – inloggen en dashboard (mededelingen, agenda, samenvatting MJOP)
+- `mjop.html` – de MJOP Planner (planning, kapitalisatie, instellingen, historie)
+- `assets/` – foto van het gebouw
 - `netlify.toml` – Netlify-instellingen
 - `supabase/01-schema.sql` – tabellen, beveiligingsregels en de opslaan-functie (al uitgevoerd)
 

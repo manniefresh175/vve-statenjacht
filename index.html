@@ -3,872 +3,290 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>MJOP · VVE Statenjacht</title>
-<style>
-*,*::before,*::after{box-sizing:border-box}
-html,body{margin:0}
-body{font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
-img{max-width:100%}
-[hidden]{display:none!important}
-/* Inloggen */
-.login{min-height:100vh;display:grid;place-items:center;padding:24px 16px;background:var(--bg)}
-.login-card{width:min(420px,100%);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:28px;display:flex;flex-direction:column;gap:14px}
-.login-card h1{font-size:26px}
-.login-card p{margin:0;color:var(--muted)}
-.login-card input{width:100%;padding:10px 12px;font-size:15px}
-.login-card button{height:42px;font-size:15px}
-.login-msg{font-size:14px;border-radius:8px;padding:10px 12px;background:var(--chip);color:var(--fg)}
-.login-msg.err{background:var(--neg-bg);color:var(--neg)}
-.userbox{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
-.userbox .role{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;background:var(--chip);border-radius:4px;padding:2px 7px}
-.userbox button{height:32px;padding:0 12px;font-size:13px}
-</style>
+<title>VVE Statenjacht</title>
+<meta name="description" content="Bewonersportaal van VVE Statenjacht: mededelingen, agenda en meerjarenonderhoudsplan.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,500..800&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
-/* Layout: werkblad — kerncijfers bovenaan, staafgrafiek per jaar, daaronder de grote matrix met totaalregel */
+/*
+  Ontwerp: het gebouw zelf is het beeld. Baksteen, oranje kozijnranden, de rivier en de lucht.
+  Eén gedurfd element: de naam "Statenjacht" breed gezet over de foto. De rest is rustig en leesbaar,
+  ook voor oudere bewoners (ruime letters, duidelijke knoppen).
+*/
 :root{
-  --bg:#f3f4f2; --surface:#ffffff; --fg:#1d2321; --muted:#5f6a66; --line:#d9dedb; --line-soft:#e9ecea;
-  --accent:#1f5c55; --accent-soft:#dcebe8; --accent-fg:#ffffff; --cell:#e7f1ef; --warn:#a2541b; --chip:#eef0ef;
-  --pos:#2f6b3a; --pos-bg:#dcefd9; --neg:#a3302a; --neg-bg:#f6dcd9;
-  --cost:#e3a33b; --saldo:#1d4f91; --dim:#b9c1bd; --grid:#d4dad7;
+  --paper:#f4f5f3; --surface:#ffffff; --ink:#1c2226; --muted:#5b6469; --line:#dde1df;
+  --brick:#7b3526; --frame:#c4672f; --sky:#255d9e; --sky-soft:#e3ecf6; --river:#5d7775;
+  --pos:#2f6b3a; --neg:#a3302a;
   --f-display:"Archivo","Helvetica Neue",Arial,sans-serif;
   --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
-  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  color-scheme:light;
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#141917; --surface:#1c2220; --fg:#e6ebe8; --muted:#9aa6a1; --line:#2f3835; --line-soft:#252d2a;
-  --accent:#6fc0b3; --accent-soft:#1f3a36; --accent-fg:#0f1a18; --cell:#20332f; --warn:#e3a06a; --chip:#262e2b;
-  --pos:#86c98f; --pos-bg:#1e3522; --neg:#ef8f86; --neg-bg:#3d2220;
-  --cost:#d9a24a; --saldo:#8fb8f0; --dim:#4c5652; --grid:#3a4440; color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#141917; --surface:#1c2220; --fg:#e6ebe8; --muted:#9aa6a1; --line:#2f3835; --line-soft:#252d2a;
-  --accent:#6fc0b3; --accent-soft:#1f3a36; --accent-fg:#0f1a18; --cell:#20332f; --warn:#e3a06a; --chip:#262e2b;
-  --pos:#86c98f; --pos-bg:#1e3522; --neg:#ef8f86; --neg-bg:#3d2220;
-  --cost:#d9a24a; --saldo:#8fb8f0; --dim:#4c5652; --grid:#3a4440; color-scheme:dark}
+@media (prefers-color-scheme: dark){:root{
+  --paper:#14181a; --surface:#1c2124; --ink:#e9ecea; --muted:#9ea8ac; --line:#2e3538;
+  --brick:#d98a74; --frame:#e0915c; --sky:#86b4e8; --sky-soft:#1d2a38; --river:#93b0ad;
+  --pos:#8fcf9b; --neg:#ef8f86; color-scheme:dark}}
 
-body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.5}
-.wrap{max-width:none;margin:0 auto;padding:28px 20px 48px;display:flex;flex-direction:column;gap:22px}
-h1{font-family:var(--f-display);font-weight:800;font-size:28px;letter-spacing:-.01em;margin:0;text-wrap:balance}
-h2{font-family:var(--f-display);font-weight:700;font-size:16px;margin:0}
-.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
-.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55}
+[hidden]{display:none!important}
+img{max-width:100%;display:block}
+a{color:var(--sky)}
+:focus-visible{outline:3px solid var(--sky);outline-offset:2px;border-radius:4px}
+h1,h2,h3{font-family:var(--f-display);margin:0;line-height:1.1;text-wrap:balance}
+p{margin:0}
+button{font:inherit;cursor:pointer}
+.btn{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 18px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:600;font-size:15px;text-decoration:none}
+.btn:hover{border-color:var(--sky);color:var(--sky)}
+.btn.primary{background:var(--sky);border-color:var(--sky);color:#fff}
+.btn.primary:hover{filter:brightness(1.08);color:#fff}
+.btn.small{height:34px;padding:0 12px;font-size:14px}
+.btn.quiet{border-color:transparent;background:transparent;color:var(--muted);padding:0 8px}
+.btn.quiet:hover{color:var(--sky)}
+.btn.danger{color:var(--neg);border-color:var(--neg);background:transparent}
 
-header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px}
-header p{margin:4px 0 0;color:var(--muted);max-width:60ch}
-.settings{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
-.field{display:flex;flex-direction:column;gap:4px}
-.field label{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
-input,select{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 10px;min-width:0}
-input:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.settings input{width:96px}
+/* ---------- Foto ---------- */
+.photo{position:relative;background:#2b2f33 url("assets/statenjacht-900.jpg") center/cover no-repeat}
+@media (min-width:900px){.photo{background-image:url("assets/statenjacht.jpg")}}
+.photo::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,20,25,.15) 0%,rgba(15,20,25,0) 35%,rgba(15,20,25,.72) 100%)}
 
-button{font:inherit;font-weight:600;cursor:pointer;border-radius:6px;padding:8px 14px;border:1px solid var(--line);background:var(--surface);color:var(--fg)}
-button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
-button.danger{color:var(--warn);border-color:var(--warn);background:transparent}
-button:disabled{opacity:.5;cursor:not-allowed}
+/* ---------- Inloggen ---------- */
+.login{min-height:100vh;display:grid;grid-template-columns:1.2fr 1fr}
+.login .photo{min-height:100%}
+.login-name{position:absolute;left:clamp(20px,4vw,48px);bottom:clamp(20px,4vw,44px);z-index:1;color:#fff}
+.login-name span{display:block;font-family:var(--f-display);font-weight:500;font-size:18px;opacity:.9}
+.login-name strong{display:block;font-family:var(--f-display);font-stretch:125%;font-weight:800;font-size:clamp(40px,6vw,84px);letter-spacing:-.01em;line-height:.95}
+.login-side{display:grid;place-items:center;padding:32px 20px;background:var(--paper)}
+.card-form{width:min(400px,100%);display:flex;flex-direction:column;gap:16px}
+.card-form h1{font-size:30px;font-weight:700}
+.card-form .lead{color:var(--muted)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:14px;font-weight:600}
+input,textarea,select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;width:100%}
+textarea{min-height:140px;resize:vertical}
+input:focus,textarea:focus{outline:2px solid var(--sky);outline-offset:0;border-color:var(--sky)}
+.msg{font-size:14px;border-radius:8px;padding:10px 12px;background:var(--sky-soft)}
+.msg.err{background:color-mix(in srgb,var(--neg) 12%,var(--surface));color:var(--neg)}
+.small-print{font-size:13px;color:var(--muted)}
+@media (max-width:820px){.login{grid-template-columns:1fr;grid-template-rows:42vh auto}}
 
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
-.kpi{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:2px}
-.kpi .v{font-family:var(--f-mono);font-size:22px;font-weight:500;font-variant-numeric:tabular-nums}
-.kpi .s{color:var(--muted);font-size:12px}
+/* ---------- Kopbalk ---------- */
+.top{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px clamp(16px,4vw,48px);background:var(--surface);border-bottom:1px solid var(--line)}
+.brand{white-space:nowrap;font-family:var(--f-display);font-weight:700;font-size:18px;font-stretch:110%;color:var(--ink);text-decoration:none}
+.brand i{font-style:normal;display:inline-block;width:10px;height:10px;background:var(--frame);margin-right:8px;vertical-align:1px}
+.who{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--muted);flex-wrap:wrap;justify-content:flex-end}
+.who .role{font-size:12px;font-weight:600;color:var(--brick);border:1px solid color-mix(in srgb,var(--brick) 40%,transparent);border-radius:20px;padding:1px 9px;margin-right:6px}
 
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
-.panel-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px}
-.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);align-items:center}
-.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--cost);margin-right:5px;vertical-align:-1px}
-.legend i.line{height:0;border-top:2px dashed var(--warn);background:none;width:14px}
-#chart{width:100%;height:auto;display:block}
-#chart text{fill:var(--muted);font-family:var(--f-mono);font-size:10px}
+/* ---------- Hero ---------- */
+.hero{height:clamp(300px,52vh,520px)}
+.hero-text{position:absolute;left:0;right:0;bottom:0;z-index:1;padding:0 clamp(16px,4vw,48px) calc(clamp(22px,4vw,40px) + 34px);color:#fff;max-width:1240px;margin:0 auto}
+.hero-text p{font-size:18px;opacity:.92;margin-bottom:6px}
+.hero-text h1{font-stretch:125%;font-weight:800;font-size:clamp(46px,9vw,124px);letter-spacing:-.015em;line-height:.9}
 
-.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:6px}
-table{border-collapse:separate;border-spacing:0;font-size:13px;min-width:100%}
-th,td{padding:7px 10px;border-bottom:1px solid var(--line-soft);white-space:nowrap;text-align:right}
-thead th{position:sticky;top:0;background:var(--surface);font-weight:600;color:var(--muted);font-size:11px;letter-spacing:.04em;border-bottom:1px solid var(--line);z-index:2}
-table{--w-name:260px;--w-bed:118px;--w-cyc:92px;--w-eer:84px}
-th.name,td.name{text-align:left;position:sticky;left:0;background:var(--surface);z-index:1;width:var(--w-name);min-width:var(--w-name);max-width:var(--w-name);white-space:normal}
-th.c-bed,td.c-bed{position:sticky;left:var(--w-name);background:var(--surface);z-index:1;width:var(--w-bed);min-width:var(--w-bed);max-width:var(--w-bed)}
-th.c-cyc,td.c-cyc{position:sticky;left:calc(var(--w-name) + var(--w-bed));background:var(--surface);z-index:1;width:var(--w-cyc);min-width:var(--w-cyc);max-width:var(--w-cyc)}
-th.c-eer,td.c-eer{position:sticky;left:calc(var(--w-name) + var(--w-bed) + var(--w-cyc));background:var(--surface);z-index:1;width:var(--w-eer);min-width:var(--w-eer);max-width:var(--w-eer);border-right:1px solid var(--line);box-shadow:4px 0 6px -4px rgba(0,0,0,.18)}
-input.cell-eer{width:64px;text-align:right;font-family:var(--f-mono)}
-thead th.c-bed,thead th.c-cyc,thead th.c-eer{z-index:3}
-tr.item:hover td.c-bed,tr.item:hover td.c-cyc,tr.item:hover td.c-eer{background:var(--accent-soft)}
-tfoot td.c-bed,tfoot td.c-cyc,tfoot td.c-eer{background:var(--surface)}
-input.cell-num{width:100%!important}
-thead th.name{z-index:3}
-td.yr{font-family:var(--f-mono);font-variant-numeric:tabular-nums;color:var(--muted)}
-td.yr.hit{background:var(--cell);color:var(--fg)}
-td.meta{font-family:var(--f-mono);font-variant-numeric:tabular-nums;color:var(--muted)}
-tr.item{cursor:pointer}
-tr.item:hover td{background:var(--accent-soft)}
-tr.item:hover td.name{background:var(--accent-soft)}
-tr.cat td{background:var(--chip);font-family:var(--f-display);font-weight:700;font-size:12px;text-align:left;letter-spacing:.02em;padding-block:6px}
-tr.cat td.name{background:var(--chip)}
-tfoot td{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-weight:600;border-top:2px solid var(--fg);border-bottom:none;background:var(--surface);color:var(--fg)}
-tfoot td.name{font-family:var(--f-display);font-weight:700}
-tfoot tr.res td{font-weight:400;color:var(--muted);border-top:1px solid var(--line-soft)}
-tfoot tr.saldo td{border-top:1px solid var(--line)}
-tfoot td.pos{color:var(--pos);background:var(--pos-bg)}
-tfoot td.neg{color:var(--neg);background:var(--neg-bg)}
-.kpi .v.pos{color:var(--pos)} .kpi .v.neg{color:var(--neg)}
-.settings input.money{width:124px}
-input.cell-in{border:1px solid transparent;background:transparent;color:inherit;padding:3px 6px;border-radius:4px;font:inherit}
-input.cell-in:hover{border-color:var(--line)}
-input.cell-in:focus{border-color:var(--accent);background:var(--surface);outline:none}
-input.cell-naam{width:100%;margin-left:-7px;font-family:var(--f-body)}
-input.cell-num{width:96px;text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
-input.cell-cyc{width:52px;text-align:right;font-family:var(--f-mono)}
-.cyc{white-space:nowrap}
-td.meta{padding-block:4px}
-#chart .hit{cursor:pointer;fill:transparent}
-#chart .hit:hover{fill:var(--fg);fill-opacity:.06}
-#chart .selbg{fill:var(--cost);fill-opacity:.16}
-th.sel,td.sel{box-shadow:inset 2px 0 0 var(--cost),inset -2px 0 0 var(--cost)}
-thead th.sel{color:var(--fg);background:var(--surface);box-shadow:inset 2px 0 0 var(--cost),inset -2px 0 0 var(--cost),inset 0 3px 0 var(--cost)}
-td.yr.hit.sel{font-weight:600}
-tr.item.dim td,tr.item.dim td.name .sub{color:var(--dim)}
-tr.item.dim td.yr.hit{background:var(--surface)}
-tr.item.dim .chip{color:var(--dim)}
-@media (max-width:600px){table{--w-name:150px;--w-bed:96px;--w-cyc:80px;--w-eer:72px}}
-.selbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;background:var(--chip);border-left:3px solid var(--cost);border-radius:6px;padding:10px 12px}
-.selbar strong{font-family:var(--f-display)}
-.views{display:flex;gap:4px;background:var(--chip);border-radius:10px;padding:4px;align-self:flex-start;flex-wrap:wrap}
-.views button{border:0;background:transparent;color:var(--muted);padding:8px 16px;border-radius:7px}
-.views button[aria-selected="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.12)}
-.view{display:flex;flex-direction:column;gap:22px}
-.navcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
-.navcard{text-align:left;display:flex;flex-direction:column;gap:6px;padding:18px 20px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
-.navcard strong{font-family:var(--f-display);font-size:19px;font-weight:700}
-.navcard .go{color:var(--accent);font-weight:600;font-size:13px}
-.navcard:hover{border-color:var(--accent)}
-.kapwrap{max-width:640px}
-/* Verwijderknop per regel in de wijzigingsmodus */
-.nm{display:flex;gap:6px;align-items:flex-start}
-.nm-main{flex:1;min-width:0}
-button.del{flex:none;padding:5px;border:1px solid transparent;background:transparent;color:var(--muted);border-radius:5px;line-height:0;margin-top:1px}
-button.del:hover,button.del:focus-visible{color:var(--neg);border-color:var(--neg)}
-button.del.armed{background:var(--neg);border-color:var(--neg);color:var(--surface);line-height:1.2;font-size:11px;padding:4px 7px}
-/* Breedtes inclusief padding, zodat de vaste kolommen precies naast elkaar staan */
-#matrixWrap th,#matrixWrap td{box-sizing:border-box}
-#matrixWrap td.meta{overflow:hidden;text-overflow:ellipsis}
-/* Duidelijker raster in de planningsmatrix */
-#matrixWrap .scroll{border-color:var(--grid)}
-#matrixWrap th,#matrixWrap td{border-bottom:1px solid var(--grid);border-right:1px solid var(--grid)}
-#matrixWrap tr > :last-child{border-right:none}
-#matrixWrap thead th{border-bottom:2px solid var(--line);background:var(--chip);color:var(--fg)}
-#matrixWrap thead th.sel{background:var(--surface)}
-#matrixWrap .c-eer{border-right:2px solid color-mix(in srgb,var(--muted) 55%,transparent)}
-#matrixWrap tr.cat td{border-bottom:1px solid var(--grid);border-top:1px solid var(--grid)}
-#matrixWrap td.yr.hit{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 35%,transparent)}
-#matrixWrap tfoot td{border-right:1px solid var(--grid)}
-/* Matrix vult het scherm: eigen verticale en horizontale scrollbalk, kop en totalen blijven staan */
-#matrixWrap .scroll{overflow:auto;max-height:calc(100vh - 270px);max-height:calc(100dvh - 270px);min-height:280px;overscroll-behavior:contain}
-#matrixWrap thead th{position:sticky;top:0}
-#matrixWrap tfoot{position:sticky;bottom:0;z-index:2}
-#matrixWrap tfoot td{background:var(--surface)}
-#matrixWrap tfoot td.name,#matrixWrap tfoot td.c-bed,#matrixWrap tfoot td.c-cyc,#matrixWrap tfoot td.c-eer{z-index:3}
-#matrixWrap tfoot tr:first-child td{box-shadow:0 -3px 6px -4px rgba(0,0,0,.25)}
-.toolbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;background:var(--bg);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;padding-block:8px;margin-block:-8px}
-.modebar{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
-.modebar button,#addBtn{height:36px;padding:0 14px;border-radius:8px;display:inline-flex;align-items:center;gap:7px;font-size:14px}
-.modebar button svg,#addBtn svg{flex:none}
-.modebar button[data-act="edit"]{background:var(--surface);color:var(--fg);border:1px solid var(--line)}
-.modebar button[data-act="edit"]:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
-.modebar button[data-act="cancel"]{background:transparent;color:var(--muted);border:1px solid var(--line)}
-.modebar button[data-act="cancel"]:hover{color:var(--fg);border-color:var(--muted)}
-.modebar button[data-act="save"]{background:var(--accent);border:1px solid var(--accent);color:var(--accent-fg)}
-.modebar button[data-act="save"]:disabled{background:var(--chip);border-color:var(--line);color:var(--muted);opacity:1}
-#addBtn{background:transparent;color:var(--accent);border:1px dashed color-mix(in srgb,var(--accent) 60%,transparent)}
-#addBtn:hover{background:var(--accent-soft)}
-.edit-sep{width:1px;height:24px;background:var(--line)}
-.modebar .lbl{font-size:13px;color:var(--muted);font-weight:600}
-.modebar .warn{font-size:12px;color:var(--warn);background:color-mix(in srgb,var(--warn) 12%,transparent);border-radius:6px;padding:4px 8px}
-body.editing .panel{border-color:color-mix(in srgb,var(--cost) 55%,var(--line));box-shadow:inset 0 3px 0 var(--cost)}
-.hist{display:flex;flex-direction:column;gap:12px}
-.hist-item{border:1px solid var(--line);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
-.hist-top{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline}
-.hist-top strong{font-family:var(--f-display)}
-.hist-top .when{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
-.hist-note{white-space:pre-wrap}
-.hist-note.none{color:var(--muted);font-style:italic}
-.hist details summary{cursor:pointer;font-size:13px;color:var(--accent);font-weight:600}
-.hist ul,.changes{margin:6px 0 0;padding-left:18px;font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:2px}
-.changes{max-height:220px;overflow:auto;background:var(--chip);border-radius:6px;padding:10px 10px 10px 26px;color:var(--fg)}
-textarea{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%;min-height:90px;resize:vertical}
-.err{color:var(--neg);font-size:13px;margin:0}
-table.kap{width:100%}
-table.kap th,table.kap td{text-align:right}
-table.kap th:first-child,table.kap td:first-child{text-align:left}
-table.kap td{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
-table.kap td.pos{color:var(--pos);background:var(--pos-bg)}
-table.kap td.neg{color:var(--neg);background:var(--neg-bg)}
-table.kap tr.begin td{background:var(--chip);font-family:var(--f-body);font-weight:600;border-bottom:1px solid var(--line)}
-table.kap tr.begin td.inp{background:var(--accent-soft);padding:4px 6px}
-table.kap input{width:100%;max-width:150px;text-align:right;font-family:var(--f-mono);font-weight:600}
-table.kap tfoot td{font-weight:600}
-table.kap td.inp{background:var(--accent-soft);padding:3px 6px}
-table.kap td.inp input{padding:4px 8px;font-weight:400}
-table.kap td.inp input::placeholder{color:var(--muted);opacity:1}
-table.kap td.inp input.ov{font-weight:600;border-color:var(--accent)}
-.legend i.res{height:0;border-top:2px dashed var(--muted);background:none;width:14px}
-.legend i.dot{width:18px;height:3px;border-radius:2px;background:var(--saldo);vertical-align:3px}
-.chip{display:inline-block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;background:var(--chip);color:var(--muted);border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:1px}
-.sub{display:block;font-size:11px;color:var(--muted)}
+/* ---------- Inhoud ---------- */
+main{max-width:1240px;margin:0 auto;padding:0 clamp(16px,4vw,48px) 64px}
 
-.empty{padding:36px 16px;text-align:center;color:var(--muted);display:flex;flex-direction:column;gap:10px;align-items:center}
-.note{font-size:12px;color:var(--muted)}
+/* MJOP: de brug tussen foto en inhoud, schuift over de foto heen */
+.mjop{position:relative;z-index:2;margin-top:-34px;background:var(--surface);border-radius:12px;border-top:4px solid var(--frame);box-shadow:0 18px 40px -24px rgba(20,25,30,.45);padding:24px clamp(18px,3vw,32px);display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) auto;gap:28px;align-items:center}
+.mjop h2{font-size:24px;font-weight:700}
+.mjop .sub{color:var(--muted);font-size:15px;margin-top:6px;max-width:42ch}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:14px 24px}
+.fact b{display:block;font-family:var(--f-display);font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.fact span{display:block;font-size:13px;line-height:1.4;color:var(--muted);margin-top:2px}
+.fact b.neg{color:var(--neg)} .fact b.pos{color:var(--pos)}
+.spark{grid-column:1/-1;width:100%;height:56px}
+@media (max-width:900px){.mjop{grid-template-columns:1fr}}
 
-dialog{border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--fg);padding:0;width:min(460px,calc(100vw - 32px))}
-dialog *,dialog *::before,dialog *::after{box-sizing:border-box}
-dialog{overflow-x:hidden}
-dialog::backdrop{background:rgba(10,20,18,.45)}
-dialog form{padding:20px;display:flex;flex-direction:column;gap:14px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.grid2 .field input{width:100%}
-dialog .field input{width:100%}
-.actions{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
-.actions .right{display:flex;gap:8px}
-.hint{font-size:12px;color:var(--muted);margin:0}
-@media (max-width:520px){.grid2{grid-template-columns:1fr}h1{font-size:23px}}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.cols{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:clamp(24px,4vw,56px);margin-top:48px}
+@media (max-width:900px){.cols{grid-template-columns:1fr}}
+.col-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-bottom:2px solid var(--ink);padding-bottom:10px;margin-bottom:6px}
+.col-head h2{font-size:26px;font-weight:700}
+
+/* Mededelingen */
+.notice{padding:20px 0;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.notice .meta{font-size:14px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.notice .pin{font-size:12px;font-weight:600;color:var(--brick);background:color-mix(in srgb,var(--frame) 16%,transparent);border-radius:20px;padding:1px 9px}
+.notice h3{font-size:21px;font-weight:700}
+.notice .body{max-width:68ch}
+.notice .body p+p{margin-top:10px}
+.notice .body.clamp{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.notice .more{align-self:flex-start;background:none;border:0;padding:0;color:var(--sky);font-weight:600;font-size:15px}
+.admin-row{display:flex;gap:4px}
+.admin-row .btn.quiet{padding-left:0}
+
+/* Agenda: kalenderblaadjes */
+.event{display:grid;grid-template-columns:64px minmax(0,1fr);gap:16px;padding:16px 0;border-bottom:1px solid var(--line);align-items:start}
+.leaf{border:1px solid var(--line);border-radius:8px;overflow:hidden;text-align:center;background:var(--surface)}
+.leaf .m{background:var(--brick);color:#fff;font-size:12px;font-weight:600;padding:2px 0}
+.leaf .d{font-family:var(--f-display);font-size:26px;font-weight:700;line-height:1.3}
+.leaf .w{font-size:11px;color:var(--muted);padding-bottom:3px}
+.event h3{font-size:18px;font-weight:700}
+.event .when{font-size:14px;color:var(--muted);margin-top:2px}
+.event .desc{font-size:15px;margin-top:6px}
+.event .soon{color:var(--sky);font-weight:600}
+
+.empty{padding:28px 0;color:var(--muted)}
+.load-err{padding:16px;border-radius:8px;background:color-mix(in srgb,var(--neg) 10%,var(--surface));color:var(--neg);margin-top:24px}
+
+/* Dialogen */
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);padding:0;width:min(560px,calc(100vw - 32px))}
+dialog::backdrop{background:rgba(15,20,25,.5)}
+dialog form{padding:24px;display:flex;flex-direction:column;gap:14px}
+dialog h2{font-size:22px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:520px){.row2{grid-template-columns:1fr}}
+.check{display:flex;align-items:center;gap:8px;font-size:15px}
+.check input{width:auto}
+.dlg-actions{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:4px}
+.dlg-actions .right{display:flex;gap:8px}
+@media (max-width:640px){#who{display:none}.who .role{margin-right:0}.top{padding-block:10px}}
+footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;color:var(--muted);font-size:14px;border-top:1px solid var(--line)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 
+<!-- ================= Inloggen ================= -->
 <div class="login" id="login" hidden>
-  <form class="login-card" id="loginForm">
-    <div class="eyebrow">VVE Statenjacht</div>
-    <h1>Inloggen</h1>
-    <div class="field"><label for="loginEmail">E-mailadres</label><input id="loginEmail" type="email" autocomplete="username" required placeholder="naam@voorbeeld.nl"></div>
-    <div class="field"><label for="loginPw">Wachtwoord</label><input id="loginPw" type="password" autocomplete="current-password" required></div>
-    <button type="submit" class="primary" id="loginBtn">Inloggen</button>
-    <p class="login-msg" id="loginMsg" hidden></p>
-    <p style="font-size:13px"><a href="#" id="toForgot">Wachtwoord vergeten?</a></p>
-    <p style="font-size:12px">Nog geen toegang? Vraag het bestuur om een uitnodiging.</p>
-  </form>
+  <div class="photo" role="img" aria-label="Het gebouw Statenjacht aan de rivier">
+    <div class="login-name"><span>Bewonersportaal</span><strong>Statenjacht</strong></div>
+  </div>
+  <div class="login-side">
+    <form class="card-form" id="loginForm">
+      <h1>Inloggen</h1>
+      <div class="field"><label for="loginEmail">E-mailadres</label><input id="loginEmail" type="email" autocomplete="username" required></div>
+      <div class="field"><label for="loginPw">Wachtwoord</label><input id="loginPw" type="password" autocomplete="current-password" required></div>
+      <button type="submit" class="btn primary" id="loginBtn">Inloggen</button>
+      <p class="msg" id="loginMsg" hidden></p>
+      <p><a href="#" id="toForgot">Wachtwoord vergeten?</a></p>
+      <p class="small-print">Nog geen account? Het bestuur stuurt je een uitnodiging per e-mail.</p>
+    </form>
 
-  <form class="login-card" id="forgotForm" hidden>
-    <div class="eyebrow">VVE Statenjacht</div>
-    <h1>Wachtwoord vergeten</h1>
-    <p>Vul je e-mailadres in. Je krijgt een e-mail met een link om een nieuw wachtwoord te kiezen.</p>
-    <div class="field"><label for="forgotEmail">E-mailadres</label><input id="forgotEmail" type="email" autocomplete="email" required></div>
-    <button type="submit" class="primary" id="forgotBtn">Stuur e-mail</button>
-    <p class="login-msg" id="forgotMsg" hidden></p>
-    <p style="font-size:13px"><a href="#" id="toLogin">Terug naar inloggen</a></p>
-  </form>
+    <form class="card-form" id="forgotForm" hidden>
+      <h1>Wachtwoord vergeten</h1>
+      <p class="lead">Vul je e-mailadres in. Je krijgt een e-mail met een link om een nieuw wachtwoord te kiezen.</p>
+      <div class="field"><label for="forgotEmail">E-mailadres</label><input id="forgotEmail" type="email" autocomplete="email" required></div>
+      <button type="submit" class="btn primary" id="forgotBtn">Stuur e-mail</button>
+      <p class="msg" id="forgotMsg" hidden></p>
+      <p><a href="#" id="toLogin">Terug naar inloggen</a></p>
+    </form>
 
-  <form class="login-card" id="pwForm" hidden>
-    <div class="eyebrow">VVE Statenjacht</div>
-    <h1 id="pwTitle">Kies je wachtwoord</h1>
-    <p id="pwIntro">Kies een wachtwoord van minimaal 8 tekens. Daarmee log je voortaan in met je e-mailadres.</p>
-    <div class="field"><label for="pw1">Nieuw wachtwoord</label><input id="pw1" type="password" autocomplete="new-password" minlength="8" required></div>
-    <div class="field"><label for="pw2">Herhaal wachtwoord</label><input id="pw2" type="password" autocomplete="new-password" minlength="8" required></div>
-    <button type="submit" class="primary" id="pwBtn">Wachtwoord opslaan</button>
-    <p class="login-msg" id="pwMsg" hidden></p>
-    <p style="font-size:13px" id="pwCancelWrap" hidden><a href="#" id="pwCancel">Annuleren</a></p>
-  </form>
+    <form class="card-form" id="pwForm" hidden>
+      <h1 id="pwTitle">Kies je wachtwoord</h1>
+      <p class="lead">Kies een wachtwoord van minimaal 8 tekens. Daarmee log je voortaan in met je e-mailadres.</p>
+      <div class="field"><label for="pw1">Nieuw wachtwoord</label><input id="pw1" type="password" autocomplete="new-password" minlength="8" required></div>
+      <div class="field"><label for="pw2">Herhaal wachtwoord</label><input id="pw2" type="password" autocomplete="new-password" minlength="8" required></div>
+      <button type="submit" class="btn primary" id="pwBtn">Wachtwoord opslaan</button>
+      <p class="msg" id="pwMsg" hidden></p>
+      <p id="pwCancelWrap" hidden><a href="#" id="pwCancel">Annuleren</a></p>
+    </form>
+  </div>
 </div>
 
-<div class="wrap" id="app" hidden>
-  <header>
-    <div>
-      <div class="eyebrow">Statenjacht · Meerjarenonderhoudsplan</div>
-      <h1>MJOP Planner</h1>
-    </div>
-    <div class="userbox"><span id="who"></span><span class="role" id="role"></span><button type="button" id="pwChangeBtn">Wachtwoord wijzigen</button><button type="button" id="logoutBtn">Uitloggen</button></div>
+<!-- ================= Dashboard ================= -->
+<div id="app" hidden>
+  <div class="top">
+    <a class="brand" href="/"><i aria-hidden="true"></i>VVE Statenjacht</a>
+    <div class="who"><span class="role" id="role"></span><span id="who"></span>
+      <button class="btn quiet small" id="pwChangeBtn">Wachtwoord wijzigen</button>
+      <button class="btn quiet small" id="logoutBtn">Uitloggen</button></div>
+  </div>
+
+  <header class="photo hero" role="img" aria-label="Het gebouw Statenjacht aan de rivier">
+    <div class="hero-text"><p id="greeting">Welkom</p><h1>Statenjacht</h1></div>
   </header>
 
-  <div class="toolbar">
-  <nav class="views" role="tablist" aria-label="Onderdelen van de app">
-    <button role="tab" id="tab-overzicht" data-view="overzicht" aria-selected="true">Overzicht</button>
-    <button role="tab" id="tab-planning" data-view="planning" aria-selected="false">Planning</button>
-    <button role="tab" id="tab-kapitalisatie" data-view="kapitalisatie" aria-selected="false">Kapitalisatie</button>
-    <button role="tab" id="tab-instellingen" data-view="instellingen" aria-selected="false">Instellingen</button>
-    <button role="tab" id="tab-historie" data-view="historie" aria-selected="false">Historie</button>
-  </nav>
-  </div>
-
-  <div class="view" id="v-overzicht" role="tabpanel" aria-labelledby="tab-overzicht">
-  <section class="kpis" id="kpis" hidden></section>
-
-  <section class="panel">
-    <div class="panel-head">
-      <div><h2>Kosten en saldo per jaar</h2><span class="note">Klik op een jaar om in de planning te zien welke onderdelen de kosten bepalen.</span></div>
-      <div class="legend"><span><i></i>MJOP-kosten</span><span><i class="res"></i>Reservering</span><span><i class="dot"></i>Saldo (punt groen = positief, rood = tekort)</span></div>
-    </div>
-    <svg id="chart" viewBox="0 0 1000 220" role="img" aria-label="Staafgrafiek van de onderhoudskosten per jaar"></svg>
-  </section>
-
-  <section class="navcards">
-    <button class="navcard" data-view="planning"><span class="eyebrow">Planning per onderdeel</span><strong id="navPlan">Alle onderdelen per jaar</strong><span class="go">Naar de planning →</span></button>
-    <button class="navcard" data-view="kapitalisatie"><span class="eyebrow">Kapitalisatie</span><strong id="navKap">Reservering en saldo per jaar</strong><span class="go">Naar de kapitalisatie →</span></button>
-  </section>
-  </div>
-
-  <div class="view" id="v-planning" role="tabpanel" aria-labelledby="tab-planning" hidden>
-  <section class="panel">
-    <div class="panel-head">
-      <h2>Planning per onderdeel</h2>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
-        <button id="addBtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Onderdeel toevoegen</button>
-        <div class="modebar" data-scope="items" hidden></div>
+  <main>
+    <section class="mjop" aria-labelledby="mjopTitle">
+      <div>
+        <h2 id="mjopTitle">Meerjarenonderhoudsplan</h2>
+        <p class="sub">Wat er de komende jaren aan het gebouw moet gebeuren, wat het kost en hoe de reserve zich ontwikkelt.</p>
       </div>
-    </div>
-    <div class="selbar" id="selBar" hidden><span id="selText"></span><button id="selClear" type="button">Selectie wissen</button></div>
-    <div id="matrixWrap"></div>
-    <p class="note" id="status">Gegevens laden…</p>
-  </section>
+      <div class="facts" id="facts">
+        <div class="fact"><b>…</b><span>Saldo reservefonds</span></div>
+        <div class="fact"><b>…</b><span>Grootste uitgave</span></div>
+        <svg class="spark" id="spark" viewBox="0 0 400 56" preserveAspectRatio="none" aria-hidden="true"></svg>
+      </div>
+      <a class="btn primary" href="/mjop.html">MJOP Planner openen</a>
+    </section>
 
-  </div>
+    <div class="load-err" id="loadErr" hidden>De gegevens konden niet worden geladen. Ververs de pagina of probeer het later opnieuw.</div>
 
-  <div class="view" id="v-instellingen" role="tabpanel" aria-labelledby="tab-instellingen" hidden>
-  <section class="panel">
-    <div class="panel-head"><h2>Instellingen</h2><span class="note">Kies Wijzigen om de instellingen aan te passen. Ze horen bij de kapitalisatie en worden samen opgeslagen.</span><div class="modebar" data-scope="plan" hidden></div></div>
-    <div class="settings">
-      <div class="field"><label for="planStart">Startjaar</label><input id="planStart" type="number" min="2000" max="2100" step="1"></div>
-      <div class="field"><label for="planYears">Looptijd (jaren)</label><input id="planYears" type="number" min="5" max="60" step="1"></div>
-      <div class="field"><label for="planIdx">Indexatie % per jaar</label><input id="planIdx" type="number" min="0" max="15" step="0.1"></div>
-      <div class="field"><label for="planBegin">Beginsaldo (€)</label><input id="planBegin" class="money" type="number" step="1"></div>
-      <div class="field"><label for="planRes">Standaard reservering (€)</label><input id="planRes" class="money" type="number" min="0" step="1"></div>
+    <div class="cols">
+      <section aria-labelledby="newsTitle">
+        <div class="col-head"><h2 id="newsTitle">Mededelingen</h2><button class="btn small" id="addNews" hidden>Mededeling plaatsen</button></div>
+        <div id="news"><p class="empty">Laden…</p></div>
+      </section>
+      <section aria-labelledby="agendaTitle">
+        <div class="col-head"><h2 id="agendaTitle">Agenda</h2><button class="btn small" id="addEvent" hidden>Afspraak toevoegen</button></div>
+        <div id="agenda"><p class="empty">Laden…</p></div>
+      </section>
     </div>
-    <p class="note">Startjaar en looptijd bepalen welke jaren je ziet. Het beginsaldo is het saldo aan het begin van het startjaar. De standaard reservering geldt voor het startjaar en stijgt daarna met de indexatie, behalve in jaren waarvoor je in de kapitalisatie een eigen bedrag hebt ingevuld.</p>
-  </section>
-  </div>
-
-  <div class="view" id="v-historie" role="tabpanel" aria-labelledby="tab-historie" hidden>
-  <section class="panel">
-    <div class="panel-head"><h2>Wijzigingshistorie</h2><span class="note">Elke keer dat iemand wijzigingen opslaat, komt hier een regel bij met de notitie en wat er is veranderd.</span></div>
-    <div class="hist" id="histList"><p class="note">Nog geen wijzigingen opgeslagen.</p></div>
-  </section>
-  </div>
-
-  <div class="view" id="v-kapitalisatie" role="tabpanel" aria-labelledby="tab-kapitalisatie" hidden>
-  <section class="panel">
-    <div class="panel-head">
-      <h2>Kapitalisatie</h2>
-      <span class="note">Saldo = vorig saldo + reservering − MJOP-kosten. Kies Wijzigen om de reservering per jaar aan te passen.</span>
-      <div class="modebar" data-scope="plan" hidden></div>
-    </div>
-    <div class="scroll kapwrap">
-      <table class="kap">
-        <thead>
-          <tr><th>Jaar</th><th>Reservering</th><th>MJOP</th><th>Saldo</th></tr>
-          <tr class="begin"><td colspan="3"><label for="kapBegin">Beginsaldo</label></td><td class="inp"><input id="kapBegin" type="number" step="1" aria-label="Beginsaldo in euro"></td></tr>
-        </thead>
-        <tbody id="kapBody"></tbody>
-        <tfoot id="kapFoot"></tfoot>
-      </table>
-    </div>
-  </section>
-  </div>
+  </main>
+  <footer>VVE Statenjacht · Vragen over de website? Neem contact op met het bestuur.</footer>
 </div>
 
-<dialog id="dlg">
-  <form id="form" method="dialog">
-    <h2 id="dlgTitle">Onderdeel</h2>
-    <div class="field"><label for="fNaam">Onderdeel</label><input id="fNaam" required placeholder="bijv. Schilderwerk kozijnen buiten"></div>
-    <div class="field"><label for="fCat">Categorie</label><input id="fCat" list="cats" required placeholder="bijv. Gevels"><datalist id="cats"></datalist></div>
-    <div class="grid2">
-      <div class="field"><label for="fBedrag">Bedrag per keer (€)</label><input id="fBedrag" type="number" min="0" step="1" required></div>
-      <div class="field"><label for="fCyclus">Cyclus (jaren)</label><input id="fCyclus" type="number" min="0" max="100" step="1" required title="0 = eenmalig"></div>
-      <div class="field"><label for="fEerste">Eerste uitvoering (jaar)</label><input id="fEerste" type="number" min="1990" max="2150" step="1" required></div>
-      <div class="field"><label for="fHoev">Hoeveelheid (optioneel)</label><input id="fHoev" placeholder="bijv. 420 m²"></div>
-    </div>
-    <p class="hint">Het bedrag geldt op het prijspeil van het startjaar. Met indexatie stijgt het per jaar. Cyclus 0 betekent eenmalig.</p>
-    <p class="hint" id="dlgJaren" hidden></p>
-    <div class="actions">
-      <button type="button" id="delBtn" class="danger">Verwijderen</button>
-      <div class="right">
-        <button type="button" id="cancelBtn">Annuleren</button>
-        <button type="submit" id="saveBtn" class="primary">Opslaan</button>
-      </div>
+<!-- Mededeling plaatsen / wijzigen -->
+<dialog id="newsDlg">
+  <form id="newsForm" method="dialog">
+    <h2 id="newsDlgTitle">Mededeling plaatsen</h2>
+    <div class="field"><label for="nTitel">Titel</label><input id="nTitel" required maxlength="140"></div>
+    <div class="field"><label for="nTekst">Tekst</label><textarea id="nTekst" required></textarea></div>
+    <label class="check"><input type="checkbox" id="nPin"> Bovenaan vastzetten</label>
+    <p class="msg err" id="newsErr" hidden></p>
+    <div class="dlg-actions">
+      <button type="button" class="btn danger" id="newsDel" hidden>Verwijderen</button>
+      <div class="right"><button type="button" class="btn" id="newsCancel">Annuleren</button><button type="submit" class="btn primary" id="newsSave">Plaatsen</button></div>
     </div>
   </form>
 </dialog>
 
-<dialog id="saveDlg">
-  <form id="saveForm" method="dialog">
-    <h2>Wijzigingen opslaan</h2>
-    <p class="hint" id="saveCount"></p>
-    <ul class="changes" id="saveList"></ul>
-    <div class="field"><label for="saveNote">Notitie bij deze wijziging</label><textarea id="saveNote" placeholder="Bijvoorbeeld: offerte lift ontvangen, bedragen aangepast"></textarea></div>
-    <p class="err" id="saveErr" hidden></p>
-    <div class="actions"><span></span><div class="right"><button type="button" id="saveBack">Terug</button><button type="submit" id="saveConfirm" class="primary">Opslaan</button></div></div>
+<!-- Afspraak toevoegen / wijzigen -->
+<dialog id="eventDlg">
+  <form id="eventForm" method="dialog">
+    <h2 id="eventDlgTitle">Afspraak toevoegen</h2>
+    <div class="field"><label for="eTitel">Wat</label><input id="eTitel" required maxlength="140" placeholder="Bijvoorbeeld: Algemene ledenvergadering"></div>
+    <div class="row2">
+      <div class="field"><label for="eDatum">Datum</label><input id="eDatum" type="date" required></div>
+      <div class="field"><label for="eLocatie">Waar (optioneel)</label><input id="eLocatie" placeholder="Bijvoorbeeld: Gemeenschappelijke ruimte"></div>
+    </div>
+    <label class="check"><input type="checkbox" id="eHeleDag"> Hele dag</label>
+    <div class="row2" id="eTimes">
+      <div class="field"><label for="eVan">Van</label><input id="eVan" type="time" value="19:30"></div>
+      <div class="field"><label for="eTot">Tot (optioneel)</label><input id="eTot" type="time"></div>
+    </div>
+    <div class="field"><label for="eOms">Toelichting (optioneel)</label><textarea id="eOms" style="min-height:90px"></textarea></div>
+    <p class="msg err" id="eventErr" hidden></p>
+    <div class="dlg-actions">
+      <button type="button" class="btn danger" id="eventDel" hidden>Verwijderen</button>
+      <div class="right"><button type="button" class="btn" id="eventCancel">Annuleren</button><button type="submit" class="btn primary" id="eventSave">Opslaan</button></div>
+    </div>
   </form>
 </dialog>
 
 <script>
 (() => {
-  const eur = new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',maximumFractionDigits:0});
-  const nl = new Intl.NumberFormat('nl-NL',{maximumFractionDigits:0});
-  const thisYear = new Date().getFullYear();
-  const state = { items: [], plan: { startjaar: thisYear + 1, jaren: 20, indexatie: 2, beginsaldo: 0, reservering: 0 }, loaded:false, canWrite:true, db:null, editing:null,
-    editMode:false, editScope:null, committed:{items:[], plan:null}, base:null, remoteChanged:false, user:null, userId:null, hist:[], names:{} };
   const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const eur = new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',maximumFractionDigits:0});
+  const state = { isAdmin:false, naam:'', news:[], events:[], started:false };
 
-  // ---------- rekenen ----------
-  function years(){ const p=state.plan; return Array.from({length:p.jaren},(_,i)=>p.startjaar+i); }
-  // Onderdelen uit de Excel met afwijkende bedragen per jaar hebben een vaste lijst 'jaren';
-  // de rest wordt berekend uit bedrag, cyclus (0 = eenmalig) en eerste uitvoering.
-  function amountIn(item, y){
-    const f = Math.pow(1+(state.plan.indexatie||0)/100, y-state.plan.startjaar);
-    if (item.jaren && typeof item.jaren==='object') return (Number(item.jaren[y])||0) * f;
-    const c = Math.max(0, Math.round(Number(item.cyclus)||0));
-    const first = Math.round(item.eerste||state.plan.startjaar);
-    if (y < first) return 0;
-    if (c===0 ? y!==first : (y-first) % c !== 0) return 0;
-    return (Number(item.bedrag)||0) * f;
-  }
-  function totals(){ return years().map(y => state.items.reduce((s,it)=>s+amountIn(it,y),0)); }
-  // Kapitalisatie: saldo = vorig saldo + reservering − MJOP-kosten
-  // Reservering per jaar: eigen bedrag voor dat jaar, anders de standaard reservering
-  // Standaard reservering stijgt mee met de indexatie (prijspeil startjaar); een zelf ingevuld bedrag geldt zoals ingevuld
-  function stdResFor(y){ return Math.round((Number(state.plan.reservering)||0) * Math.pow(1+(state.plan.indexatie||0)/100, y-state.plan.startjaar)); }
-  function resFor(y){ const o=state.plan.reserveringen?.[y]; return (o!==undefined && o!==null && o!=='') ? Number(o)||0 : stdResFor(y); }
-  function isOverride(y){ const o=state.plan.reserveringen?.[y]; return o!==undefined && o!==null && o!==''; }
-  function saldi(tot){ let s=Number(state.plan.beginsaldo)||0; const ys=years(); return tot.map((v,i)=>(s+=resFor(ys[i])-v)); }
-  // Laagste vaste reservering waarbij het saldo nooit negatief wordt
-  function neededRes(tot){ const b=Number(state.plan.beginsaldo)||0; let cum=0,R=0; tot.forEach((v,i)=>{cum+=v; R=Math.max(R,(cum-b)/(i+1));}); return Math.ceil(Math.max(0,R)); }
-
-  // ---------- render ----------
-  function render(){
-    const ys = years(), tot = totals(), sal = saldi(tot);
-    const sum = tot.reduce((a,b)=>a+b,0), avg = ys.length? sum/ys.length : 0;
-    let maxI = 0; tot.forEach((v,i)=>{ if(v>tot[maxI]) maxI=i; });
-    let minI = 0; sal.forEach((v,i)=>{ if(v<sal[minI]) minI=i; });
-    const firstNeg = sal.findIndex(v=>v<0);
-    const need = neededRes(tot), res = ys.map(resFor), std = Number(state.plan.reservering)||0;
-    $('kpis').innerHTML = `
-      <div class="kpi"><span class="eyebrow">MJOP-kosten ${ys[0]}–${ys[ys.length-1]}</span><span class="v">${eur.format(sum)}</span><span class="s">Gemiddeld ${eur.format(avg)} per jaar · ${state.items.length} onderdelen</span></div>
-      <div class="kpi"><span class="eyebrow">Laagste saldo</span><span class="v ${sal[minI]<0?'neg':'pos'}">${eur.format(sal[minI]??0)}</span><span class="s">${firstNeg>=0 ? `Tekort vanaf ${ys[firstNeg]}` : `In ${ys[minI]} · blijft positief`}</span></div>
-      <div class="kpi"><span class="eyebrow">Benodigde vaste reservering</span><span class="v">${eur.format(need)}</span><span class="s">Per jaar om nooit negatief te staan · standaard nu ${eur.format(std)}</span></div>
-      <div class="kpi"><span class="eyebrow">Duurste jaar</span><span class="v">${sum? eur.format(tot[maxI]) : '–'}</span><span class="s">${sum? ys[maxI] : 'Nog geen kosten gepland'}</span></div>`;
-    renderChart(ys, tot, sal, res);
-    renderMatrix(ys, tot, sal, res);
-    renderKap(ys, tot, sal, res);
-    renderSel(ys, tot, sal);
-    const withCost = state.items.filter(it=>ys.some(y=>amountIn(it,y))).length;
-    $('navPlan').textContent = `${state.items.length} onderdelen, ${withCost} met kosten in ${ys[0]}–${ys[ys.length-1]}`;
-    $('navKap').textContent = firstNeg>=0 ? `Tekort vanaf ${ys[firstNeg]} · laagste saldo ${eur.format(sal[minI])}` : `Saldo blijft positief · eindsaldo ${eur.format(sal[sal.length-1]??0)}`;
-    $('addBtn').hidden = state.editScope!=='items';
-    [...PLAN_IDS,'kapBegin'].forEach(id=>{ $(id).disabled = state.editScope!=='plan'; });
-    renderModeBar();
-    if (state.loaded) $('status').textContent = state.editScope==='items'
-      ? 'Wijzigingsmodus: pas namen, bedragen en cycli direct in de lijst aan, of klik op een regel voor alle velden. Niets wordt bewaard tot je op Opslaan klikt.'
-      : 'Klik op een regel om de details van een onderdeel te zien. Kies Wijzigen om iets aan te passen.';
-  }
-
-  function renderChart(ys, tot, sal, res){
-    const W=1000,H=260,L=66,R=10,T=12,B=26, svg=$('chart');
-    svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
-    const maxV = Math.max(...tot, ...sal, ...res, 1), minV = Math.min(0, ...sal);
-    const step = niceStep((maxV-minV)/5), top = Math.ceil(maxV/step)*step, bot = Math.floor(minV/step)*step;
-    const y = v => T + (H-T-B)*(top-v)/((top-bot)||1);
-    const bw = (W-L-R)/ys.length, cx = i => L+i*bw+bw/2;
-    let s='';
-    const si = ys.indexOf(state.selYear);
-    if (si>=0) s+=`<rect class="selbg" x="${L+si*bw}" y="${T}" width="${bw}" height="${H-T-B}"/>`;
-    const n = Math.round((top-bot)/step);
-    for(let k=0;k<=n;k++){ const v=bot+k*step;
-      s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="${v===0?'var(--muted)':'var(--line-soft)'}" stroke-width="${v===0?1:1}"/>`;
-      s+=`<text x="${L-8}" y="${y(v)+3}" text-anchor="end">${shortEur(v)}</text>`;
-    }
-    ys.forEach((yr,i)=>{
-      const x = L+i*bw+bw*0.2;
-      if (tot[i]>0) s+=`<rect x="${x}" y="${y(tot[i])}" width="${bw*0.6}" height="${Math.max(y(0)-y(tot[i]),1)}" rx="2" fill="var(--cost)"><title>${yr} · MJOP-kosten ${eur.format(tot[i])}</title></rect>`;
-      if (i % Math.ceil(ys.length/25) === 0) s+=`<text x="${cx(i)}" y="${H-8}" text-anchor="middle">${ys.length>15? "'"+String(yr).slice(2) : yr}</text>`;
-    });
-    if (res.some(r=>r>0)) s+=`<polyline fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="6 4" points="${res.map((r,i)=>`${L+i*bw},${y(r)} ${L+(i+1)*bw},${y(r)}`).join(' ')}"/>`;
-    s+=`<polyline fill="none" stroke="var(--saldo)" stroke-width="2.8" stroke-linejoin="round" points="${sal.map((v,i)=>`${cx(i)},${y(v)}`).join(' ')}"/>`;
-    sal.forEach((v,i)=>{ s+=`<circle cx="${cx(i)}" cy="${y(v)}" r="4" fill="${v<0?'var(--neg)':'var(--pos)'}" stroke="var(--surface)" stroke-width="1.5"><title>${ys[i]} · saldo ${eur.format(v)}</title></circle>`; });
-    // Onzichtbare klikvlakken per jaar, over de volle hoogte
-    ys.forEach((yr,i)=>{ s+=`<rect class="hit" data-y="${yr}" x="${L+i*bw}" y="${T}" width="${bw}" height="${H-T-B}"><title>${yr} · kosten ${eur.format(tot[i])} · saldo ${eur.format(sal[i])}</title></rect>`; });
-    svg.innerHTML = s;
-  }
-  function niceStep(raw){ if(raw<=0) return 1; const p=Math.pow(10,Math.floor(Math.log10(raw))); const n=raw/p; return (n<=1?1:n<=2?2:n<=5?5:10)*p; }
-  function shortEur(v){ const sg=v<0?'−':''; v=Math.abs(v); if(v>=1e6) return sg+'€'+(v/1e6).toLocaleString('nl-NL',{maximumFractionDigits:1})+'m'; if(v>=1e3) return sg+'€'+nl.format(v/1e3)+'k'; return sg+'€'+nl.format(v); }
-
-  function renderMatrix(ys, tot, sal, res){
-    const wrap = $('matrixWrap');
-    if (!state.items.length){
-      wrap.innerHTML = `<div class="empty"><strong>Nog geen onderdelen</strong><span>Voeg het eerste onderdeel toe, bijvoorbeeld de dakbedekking: bedrag per keer, cyclus en jaar van eerste uitvoering.</span>${state.editScope==='items' ? '<button class="primary" id="emptyAdd">+ Onderdeel toevoegen</button>':''}</div>`;
-      const b=$('emptyAdd'); if(b) b.onclick=()=>openDialog(null);
-      return;
-    }
-    const groups = {};
-    [...state.items].sort((a,b)=> (a.categorie||'').localeCompare(b.categorie||'','nl') || (a.naam||'').localeCompare(b.naam||'','nl'))
-      .forEach(it => (groups[it.categorie||'Overig'] ||= []).push(it));
-    const cols = ys.length + 4, sel = ys.includes(state.selYear) ? state.selYear : null;
-    const sc = y => y===sel ? ' sel' : '';
-    let h = `<div class="scroll"><table><thead><tr><th class="name">Onderdeel</th><th class="c-bed">Bedrag</th><th class="c-cyc">Cyclus</th><th class="c-eer" title="Jaar waarin de kosten de eerste keer worden gemaakt">1e jaar</th>${ys.map(y=>`<th class="${sc(y)}">${y}</th>`).join('')}</tr></thead><tbody>`;
-    for (const [cat, list] of Object.entries(groups)){
-      h += `<tr class="cat"><td class="name">${esc(cat)}</td><td colspan="${cols-1}"></td></tr>`;
-      for (const it of list){
-        const ed = state.editScope==='items', iid = esc(it.id);
-        h += `<tr class="item${sel!==null && !amountIn(it,sel) ? ' dim':''}" data-id="${iid}" tabindex="0"><td class="name">${ed ? `<div class="nm"><button type="button" class="del" title="Regel verwijderen" aria-label="${esc(it.naam)} verwijderen">${TRASH}</button><div class="nm-main">` : ''}${ed
-            ? `<input class="cell-in cell-naam" id="e-naam-${iid}" data-f="naam" value="${esc(it.naam)}" aria-label="Naam onderdeel">`
-            : esc(it.naam)}${it.voorbeeld?'<span class="chip">voorbeeld</span>':''}${it.jaren?'<span class="chip" title="Bedragen per jaar zoals in de Excel">vaste jaren</span>':''}${(()=>{const sub=[it.element&&it.element!==it.naam?it.element:'',it.locatie,it.hoeveelheid].filter(Boolean).join(' · ');return sub?`<span class="sub">${esc(sub)}</span>`:''})()}${ed?'</div></div>':''}</td>
-          <td class="meta c-bed">${ed
-            ? `<input class="cell-in cell-num" id="e-bedrag-${iid}" data-f="bedrag" type="number" min="0" step="1" value="${Number(it.bedrag)||0}" aria-label="Bedrag ${esc(it.naam)}">`
-            : eur.format(it.bedrag||0)}</td>
-          <td class="meta c-cyc">${ed
-            ? `<span class="cyc"><input class="cell-in cell-cyc" id="e-cyclus-${iid}" data-f="cyclus" type="number" min="0" max="100" step="1" value="${it.cyclus}" title="0 = eenmalig" aria-label="Cyclus ${esc(it.naam)} in jaren, 0 is eenmalig"> jr</span>`
-            : (Number(it.cyclus)>0 ? it.cyclus+' jr' : 'eenmalig')}</td>
-          <td class="meta c-eer">${ed
-            ? `<input class="cell-in cell-eer" id="e-eerste-${iid}" data-f="eerste" type="number" min="1990" max="2150" step="1" value="${it.eerste??''}" aria-label="Eerste jaar ${esc(it.naam)}">`
-            : (it.eerste??'')}</td>
-          ${ys.map(y=>{const a=amountIn(it,y);return `<td class="yr${a?' hit':''}${sc(y)}">${a?nl.format(a):''}</td>`}).join('')}</tr>`;
-      }
-    }
-    h += `</tbody><tfoot><tr><td class="name">MJOP-kosten per jaar</td><td class="c-bed"></td><td class="c-cyc"></td><td class="c-eer"></td>${tot.map((v,i)=>`<td class="${sc(ys[i])}">${v?nl.format(v):'0'}</td>`).join('')}</tr>
-      <tr class="res"><td class="name">Reservering</td><td class="c-bed"></td><td class="c-cyc"></td><td class="c-eer"></td>${res.map((r,i)=>`<td class="${sc(ys[i])}">${nl.format(r)}</td>`).join('')}</tr>
-      <tr class="saldo"><td class="name">Saldo eind van het jaar<span class="sub">Beginsaldo ${eur.format(Number(state.plan.beginsaldo)||0)}</span></td><td class="c-bed"></td><td class="c-cyc"></td><td class="c-eer"></td>${sal.map((v,i)=>`<td class="${v<0?'neg':'pos'}${sc(ys[i])}">${nl.format(v)}</td>`).join('')}</tr></tfoot></table></div>`;
-    // Bewaar het veld waarin iemand typt, zodat een herberekening de invoer niet wegveegt
-    const act = document.activeElement, keep = act && wrap.contains(act) && act.id ? {id:act.id, v:act.value, s:act.selectionStart, e:act.selectionEnd} : null;
-    const sl = wrap.querySelector('.scroll')?.scrollLeft || 0;
-    wrap.innerHTML = h;
-    const scr = wrap.querySelector('.scroll'); if (scr) scr.scrollLeft = sl;
-    if (keep){ const el=document.getElementById(keep.id); if(el){ el.value=keep.v; el.focus({preventScroll:true}); try{ el.setSelectionRange(keep.s,keep.e); }catch(e){} } }
-    wrap.querySelectorAll('tr.item').forEach(tr=>{
-      const open=()=>{ const it=state.items.find(i=>i.id===tr.dataset.id); if(it) openDialog(it); };
-      tr.onclick=e=>{
-        if (e.target.closest('button.del')){
-          e.stopPropagation();
-          const id=tr.dataset.id;
-          state.items=state.items.filter(x=>x.id!==id);
-          render(); return;
-        }
-        if(!e.target.closest('input')) open();
-      };
-      tr.onkeydown=e=>{ if(e.key==='Enter' && e.target===tr) open(); };
-    });
-    wrap.querySelectorAll('input.cell-in').forEach(inp=>{
-      inp.addEventListener('keydown',e=>{
-        if(e.key==='Enter'){ e.preventDefault(); inp.blur(); }
-        if(e.key==='Escape'){ const it=state.items.find(i=>i.id===inp.closest('tr').dataset.id); if(it) inp.value=it[inp.dataset.f]; inp.blur(); }
-      });
-      inp.addEventListener('change',()=>saveCell(inp));
-    });
-  }
-  async function saveCell(inp){
-    const id = inp.closest('tr')?.dataset.id, it = state.items.find(i=>i.id===id), f = inp.dataset.f;
-    if (!it || state.editScope!=='items') return;
-    let v = inp.value;
-    if (f==='naam'){ v=v.trim(); if(!v){ inp.value=it.naam; return; } }
-    else if (f==='bedrag'){ v=Math.round(Number(v)); if(!(v>=0)){ inp.value=it.bedrag; return; } }
-    else if (f==='cyclus'){ v=Math.round(Number(v)); if(!(v>=0&&v<=100)){ inp.value=it.cyclus; return; } }
-    else if (f==='eerste'){ v=Math.round(Number(v)); if(!(v>=1990&&v<=2150)){ inp.value=it.eerste??''; return; } }
-    if (v===it[f]) return;
-    // Bedrag of cyclus gewijzigd bij vaste jaren: vanaf nu berekent de app dit onderdeel met de cyclus
-    if (it.jaren && f!=='naam') delete it.jaren;
-    it[f]=v; render();
-  }
-  // De rijen worden alleen opnieuw opgebouwd als de jaren veranderen, zodat een veld waarin je typt de focus houdt
-  let kapKey='';
-  function renderKap(ys, tot, sal, res){
-    const editable = y => state.editScope==='plan';
-    const key = ys.join(',')+'|'+state.editScope;
-    if (key!==kapKey){
-      kapKey=key;
-      $('kapBody').innerHTML = ys.map((y,i)=>`<tr><td>${y}${y<=thisYear?'<span class="chip">'+(y===thisYear?'lopend':'verleden')+'</span>':''}</td>
-        <td class="${editable(y)?'inp':''}" id="kr${i}">${editable(y)?`<input id="kres${y}" type="number" min="0" step="1" data-y="${y}" aria-label="Reservering ${y} in euro">`:''}</td>
-        <td id="km${i}"></td><td id="ks${i}"></td></tr>`).join('');
-      $('kapBody').querySelectorAll('input[data-y]').forEach(inp=>inp.addEventListener('input',()=>{
-        const y=inp.dataset.y, v=inp.value.trim();
-        const map={...(state.plan.reserveringen||{})};
-        if (v==='' ) delete map[y]; else { const n=Math.round(Number(v)); if(!(n>=0)) return; map[y]=n; }
-        state.plan={...state.plan, reserveringen:map}; render(); savePlan();
-      }));
-    }
-    ys.forEach((y,i)=>{
-      const inp = $('kres'+y);
-      if (inp){
-        inp.placeholder = nl.format(stdResFor(y));
-        if (document.activeElement!==inp) inp.value = isOverride(y) ? state.plan.reserveringen[y] : '';
-        inp.classList.toggle('ov', isOverride(y));
-      } else $('kr'+i).textContent = eur.format(res[i]);
-      $('km'+i).textContent = eur.format(tot[i]);
-      const sc=$('ks'+i); sc.textContent = eur.format(sal[i]); sc.className = sal[i]<0?'neg':'pos';
-    });
-    const sumT = tot.reduce((a,b)=>a+b,0), sumR = res.reduce((a,b)=>a+b,0);
-    $('kapFoot').innerHTML = `<tr><td>Totaal</td><td>${eur.format(sumR)}</td><td>${eur.format(sumT)}</td><td class="${(sal[sal.length-1]??0)<0?'neg':'pos'}">${eur.format(sal[sal.length-1]??0)}</td></tr>`;
-  }
-  // ---------- jaar selecteren vanuit de grafiek ----------
-  function renderSel(ys, tot, sal){
-    const i = ys.indexOf(state.selYear);
-    if (i<0){ $('selBar').hidden = true; return; }
-    const n = state.items.filter(it=>amountIn(it,state.selYear)).length;
-    $('selText').innerHTML = `<strong>${state.selYear}</strong> · ${n} ${n===1?'onderdeel':'onderdelen'} · kosten ${eur.format(tot[i])} · saldo eind van het jaar <span style="color:var(${sal[i]<0?'--neg':'--pos'})">${eur.format(sal[i])}</span>`;
-    $('selBar').hidden = false;
-  }
-  function selectYear(y){
-    state.selYear = state.selYear===y ? null : y;
-    render();
-    if (state.selYear===null) return;
-    showView('planning');
-    $('selBar').scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto':'smooth', block:'start'});
-    const scr = $('matrixWrap').querySelector('.scroll'), th = scr?.querySelector('thead th.sel'), first = scr?.querySelectorAll('thead th.name, thead th.c-bed, thead th.c-cyc, thead th.c-eer');
-    if (scr && th){
-      // Zet de kolom midden in het zichtbare deel naast de vaste naamkolom
-      const sr = scr.getBoundingClientRect(), tr = th.getBoundingClientRect(), fw = first ? [...first].reduce((s,el)=>s+el.getBoundingClientRect().width,0) : 0;
-      const visible = scr.clientWidth - fw;
-      scr.scrollLeft += (tr.left - sr.left - fw) - Math.max(0, (visible - tr.width)/2);
-    }
-  }
-  // ---------- schermen: overzicht, planning, kapitalisatie ----------
-  const VIEWS = ['overzicht','planning','kapitalisatie','instellingen','historie'];
-  function showView(v){
-    if (!VIEWS.includes(v)) v='overzicht';
-    VIEWS.forEach(n=>{ $('v-'+n).hidden = n!==v; $('tab-'+n).setAttribute('aria-selected', n===v ? 'true':'false'); });
-    window.scrollTo({top:0});
-  }
-  document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.view)));
-  if (location.hash) showView(location.hash.slice(1));
-  $('chart').addEventListener('click', e=>{ const r=e.target.closest('[data-y]'); if(r) selectYear(Number(r.dataset.y)); });
-  $('selClear').onclick = ()=> selectYear(state.selYear);
-  const TRASH='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/><path d="M10 11v6M14 11v6"/></svg>';
-  function esc(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-  // ---------- dialoog ----------
-  let delArmed=false;
-  function openDialog(it){
-    state.editing = it;
-    $('dlgTitle').textContent = it ? 'Onderdeel bewerken' : 'Onderdeel toevoegen';
-    $('fNaam').value = it?.naam||''; $('fCat').value = it?.categorie||'';
-    $('fBedrag').value = it?.bedrag??''; $('fCyclus').value = it?.cyclus??'';
-    if (it?.jaren){
-      const lst = Object.entries(it.jaren).filter(([,a])=>a).map(([y,a])=>`${y}: ${eur.format(a)}`).join(', ');
-      $('dlgJaren').textContent = `Vaste bedragen uit de Excel: ${lst}. Wijzig je bedrag, cyclus of eerste uitvoering, dan rekent de app dit onderdeel voortaan met de cyclus.`;
-      $('dlgJaren').hidden = false;
-    } else $('dlgJaren').hidden = true;
-    $('fEerste').value = it?.eerste ?? state.plan.startjaar; $('fHoev').value = it?.hoeveelheid||'';
-    $('cats').innerHTML = [...new Set(state.items.map(i=>i.categorie).filter(Boolean))].map(c=>`<option value="${esc(c)}">`).join('');
-    $('delBtn').hidden = !it || state.editScope!=='items'; delArmed=false; $('delBtn').textContent='Verwijderen';
-    const ro = state.editScope!=='items';
-    ['fNaam','fCat','fBedrag','fCyclus','fEerste','fHoev'].forEach(f=>$(f).disabled=ro);
-    $('saveBtn').hidden = ro; $('delBtn').disabled = ro;
-    try{ $('dlg').showModal(); }catch(e){ $('dlg').setAttribute('open',''); }
-  }
-  $('cancelBtn').onclick = ()=> $('dlg').close();
-  $('addBtn').onclick = ()=> openDialog(null);
-  $('form').addEventListener('submit', async e=>{
-    e.preventDefault();
-    if(state.editScope!=='items') return;
-    const edited = {
-      naam: $('fNaam').value.trim(), categorie: $('fCat').value.trim()||'Overig',
-      bedrag: Math.max(0, Math.round(Number($('fBedrag').value)||0)), cyclus: Math.max(0, Math.round(Number($('fCyclus').value)||0)),
-      eerste: Math.round(Number($('fEerste').value)||state.plan.startjaar), hoeveelheid: $('fHoev').value.trim()
-    };
-    // Bewaar de overige velden (element, locatie, code, ...) van een bestaand onderdeel
-    const { id:_id, ...orig } = state.editing || {};
-    const body = { ...orig, ...edited };
-    if (body.jaren && (edited.bedrag!==orig.bedrag || edited.cyclus!==orig.cyclus || edited.eerste!==orig.eerste)) delete body.jaren;
-    if (state.editing){ const i=state.items.findIndex(x=>x.id===state.editing.id); if(i>=0) state.items[i]={ id:state.editing.id, ...body }; }
-    else state.items.push({ id:newId(), ...body });
-    $('dlg').close(); render();
-  });
-  $('delBtn').onclick = async ()=>{
-    if(!delArmed){ delArmed=true; $('delBtn').textContent='Klik nogmaals om te verwijderen'; return; }
-    state.items = state.items.filter(x=>x.id!==state.editing.id); $('dlg').close(); render();
-  };
-  function failWrite(err){
-    const noRights = /beheerder/i.test(err?.message||'');
-    const msg = noRights ? 'Je hebt geen rechten om deze planning te wijzigen.'
-      : 'Opslaan lukte niet. Je wijzigingen staan er nog; probeer het zo opnieuw.';
-    if (noRights) state.canWrite=false;
-    $('saveErr').textContent = msg; $('saveErr').hidden = false;
-  }
-
-  // ---------- instellingen ----------
-  const PLAN_IDS=['planStart','planYears','planIdx','planBegin','planRes'];
-  function fillSettings(){ $('planStart').value=state.plan.startjaar; $('planYears').value=state.plan.jaren; $('planIdx').value=state.plan.indexatie; $('planBegin').value=state.plan.beginsaldo; $('planRes').value=state.plan.reservering; $('kapBegin').value=state.plan.beginsaldo; }
-  // Beginsaldo in de lijst en bovenaan zijn hetzelfde veld
-  $('kapBegin').addEventListener('input',()=>{ $('planBegin').value=$('kapBegin').value; $('planBegin').dispatchEvent(new Event('input')); });
-  $('planBegin').addEventListener('input',()=>{ if(document.activeElement!==$('kapBegin')) $('kapBegin').value=$('planBegin').value; });
-  let planTimer=null;
-  PLAN_IDS.forEach(id=>$(id).addEventListener('input',()=>{
-    const s=Math.round(Number($('planStart').value)), j=Math.round(Number($('planYears').value)), x=Number($('planIdx').value);
-    const b=Math.round(Number($('planBegin').value)), r=Math.round(Number($('planRes').value));
-    if(!(s>=2000&&s<=2100&&j>=5&&j<=60&&x>=0&&x<=15&&Number.isFinite(b)&&r>=0)) return;
-    state.plan={...state.plan,startjaar:s,jaren:j,indexatie:x,beginsaldo:b,reservering:r}; render(); savePlan();
-  }));
-  // Wijzigingen worden pas bewaard bij Opslaan
-  function savePlan(){}
-
-
-  // ---------- alleen lezen / wijzigingsmodus ----------
-  const clone = o => JSON.parse(JSON.stringify(o ?? null));
-  const stable = o => Array.isArray(o) ? '['+o.map(stable).join(',')+']'
-    : (o && typeof o==='object') ? '{'+Object.keys(o).sort().filter(k=>o[k]!==undefined).map(k=>JSON.stringify(k)+':'+stable(o[k])).join(',')+'}' : JSON.stringify(o);
-  const same = (a,b) => stable(a)===stable(b);
-  const strip = ({id, ...rest}) => rest;
-  function newId(){ return 'o'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
-
-  const FIELD = { naam:'naam', categorie:'categorie', bedrag:'bedrag', cyclus:'cyclus', eerste:'eerste uitvoering', hoeveelheid:'hoeveelheid' };
-  const fmt = (f,v) => v===undefined||v===null||v==='' ? '–' : f==='bedrag' ? eur.format(Number(v)||0) : f==='cyclus' ? (Number(v)>0 ? v+' jr' : 'eenmalig') : String(v);
-  // Leesbare lijst van wat er verschilt tussen de opgeslagen stand en het concept
-  function diffs(){
-    if (!state.editMode || !state.base) return [];
-    const out=[], bp=state.base.plan||{}, dp=state.plan||{};
-    const PL = { startjaar:['Startjaar',v=>v], jaren:['Looptijd',v=>v+' jaar'], indexatie:['Indexatie',v=>v+'%'], beginsaldo:['Beginsaldo',v=>eur.format(v||0)], reservering:['Standaard reservering',v=>eur.format(v||0)] };
-    for (const [k,[lbl,f]] of Object.entries(PL)) if (!same(bp[k],dp[k])) out.push(`${lbl}: ${f(bp[k])} → ${f(dp[k])}`);
-    const br=bp.reserveringen||{}, dr=dp.reserveringen||{};
-    [...new Set([...Object.keys(br),...Object.keys(dr)])].sort().forEach(y=>{
-      if (!same(br[y],dr[y])) out.push(`Reservering ${y}: ${br[y]!=null&&br[y]!==''?eur.format(br[y]):'standaard'} → ${dr[y]!=null&&dr[y]!==''?eur.format(dr[y]):'standaard'}`);
-    });
-    const bm=new Map(state.base.items.map(i=>[i.id,i])), dm=new Map(state.items.map(i=>[i.id,i]));
-    for (const it of state.items){
-      const b=bm.get(it.id);
-      if (!b){ out.push(`Toegevoegd: ${it.naam} (${fmt('bedrag',it.bedrag)}, ${fmt('cyclus',it.cyclus)}, vanaf ${it.eerste})`); continue; }
-      if (same(strip(b),strip(it))) continue;
-      const parts=[];
-      for (const [f,lbl] of Object.entries(FIELD)) if (!same(b[f],it[f])) parts.push(`${lbl} ${fmt(f,b[f])} → ${fmt(f,it[f])}`);
-      if (b.jaren && !it.jaren) parts.push('vaste jaren vervangen door cyclus');
-      out.push(`${b.naam}: ${parts.join(', ') || 'gewijzigd'}`);
-    }
-    for (const b of state.base.items) if (!dm.has(b.id)) out.push(`Verwijderd: ${b.naam}`);
-    return out;
-  }
-
-  let cancelArmed=false;
-  const ICON_EDIT='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>';
-  const ICON_SAVE='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
-  // Elke sectie heeft een eigen Wijzigen-knop: planning (onderdelen) of kapitalisatie (reservering en instellingen)
-  function renderModeBar(){
-    document.body.classList.toggle('editing', state.editMode);
-    const n = state.editMode ? diffs().length : 0;
-    document.querySelectorAll('.modebar[data-scope]').forEach(bar=>{
-      const s=bar.dataset.scope;
-      if (!state.db){ bar.hidden=true; return; }
-      bar.hidden=false; bar.classList.toggle('active', state.editScope===s);
-      if (!state.editScope){
-        bar.innerHTML = `<button data-act="edit" ${state.canWrite?'':'disabled title="Je hebt geen rechten om te wijzigen"'}>${ICON_EDIT}Wijzigen</button>`;
-      } else if (state.editScope!==s){
-        bar.innerHTML = `<button disabled data-act="edit" title="Sla eerst de wijzigingen in de ${state.editScope==='items'?'planning':'kapitalisatie'} op, of annuleer ze">${ICON_EDIT}Wijzigen</button>`;
-      } else {
-        bar.innerHTML = (state.remoteChanged ? `<span class="warn" title="Bij opslaan overschrijven jouw wijzigingen die van de ander">Iemand anders heeft intussen iets opgeslagen</span>` : '')
-          + `<button data-act="cancel">${cancelArmed?'Klik nogmaals om te verwerpen':'Annuleren'}</button><button data-act="save" ${n?'':'disabled'}>${ICON_SAVE}Opslaan</button>`;
-      }
-    });
-  }
-  document.addEventListener('click', e=>{
-    const b=e.target.closest('.modebar[data-scope] button[data-act]'); if (!b) return;
-    const act=b.dataset.act, scope=b.closest('.modebar').dataset.scope;
-    if (act==='edit') enterEdit(scope);
-    else if (act==='cancel') cancelEdit();
-    else if (act==='save') openSave();
-  });
-  function enterEdit(scope){
-    if (!state.canWrite || !state.db) return;
-    state.base = { items: clone(state.committed.items), plan: clone(state.committed.plan || state.plan) };
-    state.items = clone(state.base.items); state.plan = clone(state.base.plan);
-    state.editMode = true; state.editScope = scope; state.remoteChanged = false; cancelArmed=false; kapKey='';
-    fillSettings(); render();
-  }
-  function leaveEdit(){
-    state.delArm=null;
-    state.editMode=false; state.editScope=null; state.base=null; state.remoteChanged=false; cancelArmed=false; kapKey='';
-    state.items = clone(state.committed.items); if (state.committed.plan) state.plan = clone(state.committed.plan);
-    try{ $('dlg').close(); }catch(e){}
-    fillSettings(); render();
-  }
-  function cancelEdit(){
-    if (diffs().length && !cancelArmed){ cancelArmed=true; renderModeBar(); return; }
-    leaveEdit();
-  }
-  function openSave(){
-    const lines=diffs(); if (!lines.length) return;
-    $('saveCount').textContent = `${lines.length} ${lines.length===1?'wijziging':'wijzigingen'} worden opgeslagen:`;
-    $('saveList').innerHTML = lines.map(l=>`<li>${esc(l)}</li>`).join('');
-    $('saveErr').hidden = true; $('saveConfirm').disabled = false; $('saveConfirm').textContent='Opslaan';
-    try{ $('saveDlg').showModal(); }catch(e){ $('saveDlg').setAttribute('open',''); }
-    $('saveNote').focus();
-  }
-  $('saveBack').onclick = ()=> $('saveDlg').close();
-  $('saveForm').addEventListener('submit', async e=>{
-    e.preventDefault();
-    const lines=diffs(); if (!lines.length || !state.db) return;
-    $('saveConfirm').disabled = true; $('saveConfirm').textContent='Bezig met opslaan…'; $('saveErr').hidden = true;
-    try{
-      const bm=new Map(state.base.items.map(i=>[i.id,i])), dm=new Map(state.items.map(i=>[i.id,i]));
-      const upserts = state.items.filter(it=>{ const b=bm.get(it.id); return !b || !same(strip(b),strip(it)); }).map(it=>({ ...it, jaren: it.jaren || null }));
-      const deletes = state.base.items.filter(b=>!dm.has(b.id)).map(b=>b.id);
-      const p = state.plan;
-      const planChanged = !same(state.base.plan, p);
-      // Alles in één keer: de database controleert of je beheerder bent en schrijft de historie
-      const { error } = await sb.rpc('opslaan', {
-        p_upsert: upserts, p_delete: deletes,
-        p_plan: planChanged ? { startjaar:p.startjaar, looptijd:p.jaren, indexatie:p.indexatie, beginsaldo:p.beginsaldo, reservering:p.reservering, reserveringen:p.reserveringen||{} } : null,
-        p_sectie: state.editScope==='items' ? 'planning' : 'kapitalisatie',
-        p_notitie: $('saveNote').value.trim(), p_wijzigingen: lines.slice(0,400)
-      });
-      if (error) throw error;
-      state.committed = { items: clone(state.items), plan: clone(state.plan) };
-      $('saveNote').value=''; $('saveDlg').close(); leaveEdit();
-      loadAll().catch(()=>{});
-    }catch(err){ failWrite(err); $('saveConfirm').disabled=false; $('saveConfirm').textContent='Opnieuw proberen'; }
-  });
-
-  // ---------- historie ----------
-  const when = iso => { try{ return new Date(iso).toLocaleString('nl-NL',{dateStyle:'medium',timeStyle:'short'}); }catch(e){ return iso; } };
-  async function renderHist(){
-    const list=$('histList');
-    if (!state.hist.length){ list.innerHTML='<p class="note">Nog geen wijzigingen opgeslagen. Elke keer dat iemand op Opslaan klikt, komt hier een regel bij.</p>'; return; }
-    const draw = () => { list.innerHTML = state.hist.map((h,i)=>{
-      const ch = Array.isArray(h.wijzigingen) ? h.wijzigingen : [];
-      return `<article class="hist-item"><div class="hist-top"><strong>${esc(h.wie_naam || 'Onbekend')}</strong>${h.sectie?`<span class="chip">${esc(h.sectie)}</span>`:''}<span class="when">${esc(when(h.tijd))}</span></div>
-        <p class="hist-note${h.notitie?'':' none'}">${h.notitie ? esc(h.notitie) : 'Geen notitie'}</p>
-        <details${i===0?' open':''}><summary>${h.aantal||ch.length} ${ (h.aantal||ch.length)===1?'wijziging':'wijzigingen'}</summary><ul>${ch.map(c=>`<li>${esc(c)}</li>`).join('')}</ul></details></article>`;
-    }).join(''); };
-    draw();
-  }
-
-  // ---------- opstarten: inloggen en gegevens uit Supabase ----------
+  // ---------- Supabase ----------
   const SUPABASE_URL = 'https://tnqjubjtsdwulwjbbhfp.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_ctC2kV3NYxnioBKKblrBtg_IdUzyVvQ';   // publieke sleutel, bedoeld voor de browser
-  // Kwam iemand binnen via een uitnodiging of een 'wachtwoord vergeten'-link? Lees dat voordat Supabase de link verwerkt.
+  // Kwam iemand binnen via een uitnodiging of 'wachtwoord vergeten'? Lees dat voordat Supabase de link verwerkt.
   const linkType = new URLSearchParams(location.hash.slice(1)).get('type');
   let needPassword = linkType === 'invite' || linkType === 'recovery';
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  const mapPlan = r => ({ startjaar:r.startjaar, jaren:r.looptijd, indexatie:Number(r.indexatie)||0, beginsaldo:Number(r.beginsaldo)||0, reservering:Number(r.reservering)||0, reserveringen:r.reserveringen||{} });
-  const mapItem = r => { const o={ id:r.id, naam:r.naam, categorie:r.categorie||'', element:r.element||'', locatie:r.locatie||'', code:r.code||'', hoeveelheid:r.hoeveelheid||'', bedrag:Number(r.bedrag)||0, cyclus:Number(r.cyclus)||0, eerste:r.eerste, bron:r.bron||'' }; if (r.jaren) o.jaren=r.jaren; return o; };
-
-  async function loadAll(){
-    const [p,o,hs] = await Promise.all([
-      sb.from('plan').select('*').eq('id',1).maybeSingle(),
-      sb.from('onderdelen').select('*'),
-      sb.from('historie').select('*').order('tijd',{ascending:false}).limit(300)
-    ]);
-    if (p.error || o.error) throw (p.error || o.error);
-    if (p.data) state.committed.plan = mapPlan(p.data);
-    state.committed.items = (o.data||[]).map(mapItem);
-    state.hist = hs.data || [];
-    state.loaded = true;
-    if (!state.editMode){ state.items = clone(state.committed.items); if (state.committed.plan) state.plan = clone(state.committed.plan); kapKey=''; fillSettings(); }
-    render(); renderHist();
-  }
-
-  let started=false;
-  async function start(session){
-    if (!session){ $('app').hidden=true; $('login').hidden=false; showCard('loginForm'); return; }
-    if (needPassword){ $('app').hidden=true; $('login').hidden=false; showPwCard(linkType==='recovery' ? 'Nieuw wachtwoord' : 'Welkom! Kies je wachtwoord', false); return; }
-    if (started) return; started=true;
-    $('login').hidden=true; $('app').hidden=false;
-    $('who').textContent = session.user.email;
-    state.db = sb; state.userId = session.user.id;
-    const { data:prof } = await sb.from('profiles').select('rol').eq('id', session.user.id).maybeSingle();
-    state.canWrite = prof?.rol === 'admin';
-    $('role').textContent = state.canWrite ? 'Beheerder' : 'Alleen lezen';
-    try{ await loadAll(); }catch(e){ $('status').textContent='De gegevens konden niet geladen worden. Ververs de pagina.'; render(); }
-  }
-
+  // ---------- Inloggen ----------
   function showCard(id){ ['loginForm','forgotForm','pwForm'].forEach(c=>{ $(c).hidden = c!==id; }); }
-  function showMsg(id, text, err){ const m=$(id); m.hidden=false; m.className='login-msg'+(err?' err':''); m.textContent=text; }
+  function showMsg(id, text, err){ const m=$(id); m.hidden=false; m.className='msg'+(err?' err':''); m.textContent=text; }
+  function showLogin(card){ $('app').hidden=true; $('login').hidden=false; showCard(card); }
   function showPwCard(title, canCancel){
     $('pwTitle').textContent=title; $('pw1').value=''; $('pw2').value=''; $('pwMsg').hidden=true;
-    $('pwCancelWrap').hidden=!canCancel; showCard('pwForm'); $('pw1').focus();
+    $('pwCancelWrap').hidden=!canCancel; showLogin('pwForm'); $('pw1').focus();
   }
   $('toForgot').onclick = e=>{ e.preventDefault(); $('forgotEmail').value=$('loginEmail').value; $('forgotMsg').hidden=true; showCard('forgotForm'); };
   $('toLogin').onclick  = e=>{ e.preventDefault(); showCard('loginForm'); };
@@ -881,18 +299,16 @@ dialog .field input{width:100%}
     if (error) showMsg('loginMsg', /invalid/i.test(error.message) ? 'E-mailadres of wachtwoord klopt niet. Nog geen wachtwoord? Kies dan "Wachtwoord vergeten?".'
       : /rate|many/i.test(error.message) ? 'Te veel pogingen. Wacht even en probeer het opnieuw.' : 'Inloggen lukte niet. Probeer het later opnieuw.', true);
   });
-
   $('forgotForm').addEventListener('submit', async e=>{
     e.preventDefault();
     const email=$('forgotEmail').value.trim();
     $('forgotBtn').disabled=true;
     const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin });
     $('forgotBtn').disabled=false;
-    if (error && (error.status===429 || /rate|seconds|limit/i.test(error.message||''))) showMsg('forgotMsg','Er zijn net te veel e-mails verstuurd. De e-mail is niet verstuurd; probeer het over een uur opnieuw of neem contact op met het bestuur.',true);
+    if (error && (error.status===429 || /rate|seconds|limit/i.test(error.message||''))) showMsg('forgotMsg','Je hebt net al een e-mail aangevraagd. Wacht een minuut en probeer het opnieuw.',true);
     else if (error) showMsg('forgotMsg','Versturen lukte niet. Probeer het later opnieuw.',true);
-    else showMsg('forgotMsg', `Als ${email} toegang heeft, staat er binnen een paar minuten een e-mail in je inbox. Kijk ook in je spammap.`);
+    else showMsg('forgotMsg', `Als ${email} een account heeft, staat er binnen een paar minuten een e-mail in je inbox. Kijk ook in je spammap.`);
   });
-
   $('pwForm').addEventListener('submit', async e=>{
     e.preventDefault();
     const a=$('pw1').value, b=$('pw2').value;
@@ -902,23 +318,190 @@ dialog .field input{width:100%}
     const { error } = await sb.auth.updateUser({ password:a });
     $('pwBtn').disabled=false;
     if (error) return showMsg('pwMsg', /same|different/i.test(error.message) ? 'Kies een ander wachtwoord dan je huidige.' : /weak|short/i.test(error.message) ? 'Dit wachtwoord is te zwak. Kies een langer wachtwoord.' : 'Opslaan lukte niet. Probeer het opnieuw.', true);
-    needPassword=false;
-    history.replaceState(null,'',location.pathname);
-    if (started){ $('login').hidden=true; $('app').hidden=false; }
+    needPassword=false; history.replaceState(null,'',location.pathname);
+    if (state.started){ $('login').hidden=true; $('app').hidden=false; }
     else { const { data } = await sb.auth.getSession(); start(data.session); }
   });
   $('pwCancel').onclick = e=>{ e.preventDefault(); $('login').hidden=true; $('app').hidden=false; };
-  $('pwChangeBtn').onclick = ()=>{ $('app').hidden=true; $('login').hidden=false; showPwCard('Wachtwoord wijzigen', true); };
+  $('pwChangeBtn').onclick = ()=> showPwCard('Wachtwoord wijzigen', true);
+  $('logoutBtn').onclick = async ()=>{ await sb.auth.signOut(); location.replace('/'); };
 
-  $('logoutBtn').onclick = async ()=>{ await sb.auth.signOut(); location.replace(location.origin); };
+  // ---------- Starten ----------
+  async function start(session){
+    if (!session){ showLogin('loginForm'); return; }
+    if (needPassword){ showPwCard(linkType==='recovery' ? 'Nieuw wachtwoord' : 'Welkom! Kies je wachtwoord', false); return; }
+    if (state.started) return; state.started=true;
+    $('login').hidden=true; $('app').hidden=false;
+    $('who').textContent = session.user.email;
+    const h = new Date().getHours();
+    $('greeting').textContent = h<6 ? 'Goedenacht' : h<12 ? 'Goedemorgen' : h<18 ? 'Goedemiddag' : 'Goedenavond';
+    const { data:prof } = await sb.from('profiles').select('rol,naam').eq('id', session.user.id).maybeSingle();
+    state.isAdmin = prof?.rol === 'admin';
+    $('role').textContent = state.isAdmin ? 'Beheerder' : 'Bewoner';
+    $('addNews').hidden = $('addEvent').hidden = !state.isAdmin;
+    loadAll();
+  }
+  async function loadAll(){
+    const today = new Date(); today.setHours(0,0,0,0);
+    const [p,o,n,a] = await Promise.all([
+      sb.from('plan').select('*').eq('id',1).maybeSingle(),
+      sb.from('onderdelen').select('bedrag,cyclus,eerste,jaren'),
+      sb.from('mededelingen').select('*').order('vastgepind',{ascending:false}).order('geplaatst',{ascending:false}).limit(10),
+      sb.from('agenda').select('*').gte('start', today.toISOString()).order('start',{ascending:true}).limit(8)
+    ]);
+    $('loadErr').hidden = !(p.error || o.error || n.error || a.error);
+    if (p.data && o.data) renderMjop(p.data, o.data);
+    state.news = n.data || []; state.events = a.data || [];
+    renderNews(); renderAgenda();
+  }
 
-  // Bij terugkeren naar het tabblad de nieuwste gegevens ophalen (niet tijdens wijzigen)
-  document.addEventListener('visibilitychange', ()=>{ if (!document.hidden && started && !state.editMode) loadAll().catch(()=>{}); });
+  // ---------- MJOP-samenvatting (zelfde rekenregels als de planner) ----------
+  function renderMjop(plan, items){
+    const start=plan.startjaar, n=plan.looptijd, idx=Number(plan.indexatie)||0, res=plan.reserveringen||{};
+    const f = y => Math.pow(1+idx/100, y-start);
+    const amount = (it,y) => {
+      if (it.jaren) return (Number(it.jaren[y])||0)*f(y);
+      const c=Math.max(0,Math.round(Number(it.cyclus)||0)), first=Math.round(it.eerste||start);
+      if (y<first || (c===0 ? y!==first : (y-first)%c!==0)) return 0;
+      return (Number(it.bedrag)||0)*f(y);
+    };
+    const resFor = y => (res[y]!==undefined && res[y]!==null && res[y]!=='') ? Number(res[y])||0 : Math.round((Number(plan.reservering)||0)*f(y));
+    const ys = Array.from({length:n},(_,i)=>start+i);
+    let s = Number(plan.beginsaldo)||0;
+    const tot = ys.map(y=>items.reduce((t,it)=>t+amount(it,y),0));
+    const sal = ys.map((y,i)=> s += resFor(y)-tot[i]);
+    const thisYear = new Date().getFullYear(), iNow = Math.max(0, ys.indexOf(thisYear));
+    let iMax = 0; tot.forEach((v,i)=>{ if(v>tot[iMax]) iMax=i; });
+    const iNeg = sal.findIndex(v=>v<0);
+    $('facts').innerHTML = `
+      <div class="fact"><b class="${sal[iNow]<0?'neg':''}">${eur.format(sal[iNow]??0)}</b><span>Saldo reservefonds eind ${ys[iNow]}</span></div>
+      <div class="fact"><b>${eur.format(tot[iMax]||0)}</b><span>Grootste uitgave, in ${ys[iMax]}</span></div>
+      <div class="fact" style="grid-column:1/-1"><span>${iNeg>=0 ? `Volgens de huidige planning ontstaat in <strong>${ys[iNeg]}</strong> een tekort.` : 'Volgens de huidige planning blijft het saldo positief tot en met ' + ys[ys.length-1] + '.'}</span></div>
+      <svg class="spark" id="spark" viewBox="0 0 400 56" preserveAspectRatio="none" aria-hidden="true"></svg>`;
+    // Klein lijntje van het saldo over de hele looptijd, met de nullijn
+    const W=400,H=56,P=4, max=Math.max(...sal,0), min=Math.min(...sal,0), sy=v=>P+(H-2*P)*(max-v)/((max-min)||1);
+    const pts = sal.map((v,i)=>`${(i/(sal.length-1||1))*W},${sy(v)}`).join(' ');
+    $('spark').innerHTML = `<line x1="0" x2="${W}" y1="${sy(0)}" y2="${sy(0)}" stroke="var(--line)" stroke-width="1"/>
+      <polyline points="${pts}" fill="none" stroke="var(--sky)" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>`;
+  }
 
-  fillSettings(); render();
+  // ---------- Mededelingen ----------
+  const dateLong = d => new Date(d).toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'});
+  function paragraphs(t){ return String(t||'').split(/\n{2,}|\r\n\r\n/).map(p=>`<p>${esc(p).replace(/\n/g,'<br>')}</p>`).join(''); }
+  function renderNews(){
+    const box=$('news');
+    if (!state.news.length){ box.innerHTML = `<p class="empty">Er zijn nog geen mededelingen.${state.isAdmin?' Plaats de eerste met de knop hierboven.':''}</p>`; return; }
+    box.innerHTML = state.news.map(m=>`
+      <article class="notice" data-id="${m.id}">
+        <div class="meta">${m.vastgepind?'<span class="pin">Vastgezet</span>':''}<span>${dateLong(m.geplaatst)}</span>${m.auteur_naam?`<span>${esc(m.auteur_naam)}</span>`:''}</div>
+        <h3>${esc(m.titel)}</h3>
+        <div class="body clamp">${paragraphs(m.tekst)}</div>
+        <button class="more" type="button" hidden>Lees verder</button>
+        ${state.isAdmin?`<div class="admin-row"><button class="btn quiet small" data-edit-news="${m.id}">Wijzigen</button></div>`:''}
+      </article>`).join('');
+    // Alleen "Lees verder" tonen als de tekst echt is ingekort
+    box.querySelectorAll('.notice').forEach(n=>{
+      const body=n.querySelector('.body'), more=n.querySelector('.more');
+      if (body.scrollHeight > body.clientHeight + 2) more.hidden=false;
+      more.onclick=()=>{ const open=body.classList.toggle('clamp'); more.textContent = open ? 'Lees verder' : 'Inklappen'; };
+    });
+  }
+
+  // ---------- Agenda ----------
+  function renderAgenda(){
+    const box=$('agenda');
+    if (!state.events.length){ box.innerHTML = `<p class="empty">Er staan geen afspraken gepland.${state.isAdmin?' Voeg er een toe met de knop hierboven.':''}</p>`; return; }
+    const today=new Date(); today.setHours(0,0,0,0);
+    box.innerHTML = state.events.map(ev=>{
+      const d=new Date(ev.start), days=Math.round((new Date(d).setHours(0,0,0,0)-today)/864e5);
+      const soon = days===0 ? 'Vandaag' : days===1 ? 'Morgen' : days<7 ? `Over ${days} dagen` : '';
+      const t = ev.hele_dag ? 'Hele dag' : d.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'}) + (ev.eind ? ' – ' + new Date(ev.eind).toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'}) : ' uur');
+      return `<article class="event">
+        <div class="leaf" aria-hidden="true"><div class="m">${d.toLocaleDateString('nl-NL',{month:'short'}).replace('.','')}</div><div class="d">${d.getDate()}</div><div class="w">${d.toLocaleDateString('nl-NL',{weekday:'short'})}</div></div>
+        <div><h3>${esc(ev.titel)}</h3>
+          <p class="when">${soon?`<span class="soon">${soon}</span> · `:''}${d.toLocaleDateString('nl-NL',{weekday:'long',day:'numeric',month:'long'})}, ${t}${ev.locatie?` · ${esc(ev.locatie)}`:''}</p>
+          ${ev.omschrijving?`<p class="desc">${esc(ev.omschrijving)}</p>`:''}
+          ${state.isAdmin?`<div class="admin-row"><button class="btn quiet small" data-edit-event="${ev.id}">Wijzigen</button></div>`:''}
+        </div></article>`;
+    }).join('');
+  }
+
+  // ---------- Beheer: mededelingen ----------
+  let editingNews=null, delArmedN=false;
+  function openNews(m){
+    editingNews=m||null; delArmedN=false;
+    $('newsDlgTitle').textContent = m ? 'Mededeling wijzigen' : 'Mededeling plaatsen';
+    $('newsSave').textContent = m ? 'Opslaan' : 'Plaatsen';
+    $('nTitel').value=m?.titel||''; $('nTekst').value=m?.tekst||''; $('nPin').checked=!!m?.vastgepind;
+    $('newsDel').hidden=!m; $('newsDel').textContent='Verwijderen'; $('newsErr').hidden=true;
+    $('newsDlg').showModal(); $('nTitel').focus();
+  }
+  $('addNews').onclick=()=>openNews(null);
+  $('news').addEventListener('click',e=>{ const b=e.target.closest('[data-edit-news]'); if(b) openNews(state.news.find(m=>String(m.id)===b.dataset.editNews)); });
+  $('newsCancel').onclick=()=>$('newsDlg').close();
+  $('newsForm').addEventListener('submit', async e=>{
+    e.preventDefault();
+    const row={ titel:$('nTitel').value.trim(), tekst:$('nTekst').value.trim(), vastgepind:$('nPin').checked };
+    $('newsSave').disabled=true;
+    const q = editingNews ? sb.from('mededelingen').update(row).eq('id',editingNews.id)
+                          : sb.from('mededelingen').insert({ ...row, auteur_naam:'Bestuur VVE Statenjacht' });
+    const { error } = await q; $('newsSave').disabled=false;
+    if (error) return showMsg('newsErr','Opslaan lukte niet. Controleer of je nog bent ingelogd en probeer het opnieuw.',true);
+    $('newsDlg').close(); loadAll();
+  });
+  $('newsDel').onclick = async ()=>{
+    if (!delArmedN){ delArmedN=true; $('newsDel').textContent='Klik nogmaals om te verwijderen'; return; }
+    const { error } = await sb.from('mededelingen').delete().eq('id',editingNews.id);
+    if (error) return showMsg('newsErr','Verwijderen lukte niet. Probeer het opnieuw.',true);
+    $('newsDlg').close(); loadAll();
+  };
+
+  // ---------- Beheer: agenda ----------
+  let editingEvent=null, delArmedE=false;
+  const pad = n => String(n).padStart(2,'0');
+  function openEvent(ev){
+    editingEvent=ev||null; delArmedE=false;
+    $('eventDlgTitle').textContent = ev ? 'Afspraak wijzigen' : 'Afspraak toevoegen';
+    const d = ev ? new Date(ev.start) : null, t = ev?.eind ? new Date(ev.eind) : null;
+    $('eTitel').value=ev?.titel||''; $('eLocatie').value=ev?.locatie||''; $('eOms').value=ev?.omschrijving||'';
+    $('eDatum').value = d ? `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}` : '';
+    $('eHeleDag').checked=!!ev?.hele_dag; $('eTimes').hidden=!!ev?.hele_dag;
+    $('eVan').value = d && !ev.hele_dag ? `${pad(d.getHours())}:${pad(d.getMinutes())}` : '19:30';
+    $('eTot').value = t ? `${pad(t.getHours())}:${pad(t.getMinutes())}` : '';
+    $('eventDel').hidden=!ev; $('eventDel').textContent='Verwijderen'; $('eventErr').hidden=true;
+    $('eventDlg').showModal(); $('eTitel').focus();
+  }
+  $('eHeleDag').onchange=()=>{ $('eTimes').hidden=$('eHeleDag').checked; };
+  $('addEvent').onclick=()=>openEvent(null);
+  $('agenda').addEventListener('click',e=>{ const b=e.target.closest('[data-edit-event]'); if(b) openEvent(state.events.find(x=>String(x.id)===b.dataset.editEvent)); });
+  $('eventCancel').onclick=()=>$('eventDlg').close();
+  $('eventForm').addEventListener('submit', async e=>{
+    e.preventDefault();
+    const hele=$('eHeleDag').checked, day=$('eDatum').value;
+    const start=new Date(`${day}T${hele?'00:00':($('eVan').value||'00:00')}`);
+    const eind = !hele && $('eTot').value ? new Date(`${day}T${$('eTot').value}`) : null;
+    if (eind && eind<=start) return showMsg('eventErr','De eindtijd ligt voor de begintijd.',true);
+    const row={ titel:$('eTitel').value.trim(), start:start.toISOString(), eind:eind?eind.toISOString():null, hele_dag:hele,
+                locatie:$('eLocatie').value.trim()||null, omschrijving:$('eOms').value.trim()||null };
+    $('eventSave').disabled=true;
+    const q = editingEvent ? sb.from('agenda').update(row).eq('id',editingEvent.id) : sb.from('agenda').insert(row);
+    const { error } = await q; $('eventSave').disabled=false;
+    if (error) return showMsg('eventErr','Opslaan lukte niet. Controleer of je nog bent ingelogd en probeer het opnieuw.',true);
+    $('eventDlg').close(); loadAll();
+  });
+  $('eventDel').onclick = async ()=>{
+    if (!delArmedE){ delArmedE=true; $('eventDel').textContent='Klik nogmaals om te verwijderen'; return; }
+    const { error } = await sb.from('agenda').delete().eq('id',editingEvent.id);
+    if (error) return showMsg('eventErr','Verwijderen lukte niet. Probeer het opnieuw.',true);
+    $('eventDlg').close(); loadAll();
+  };
+
+  // Nieuwste gegevens bij terugkeer naar het tabblad
+  document.addEventListener('visibilitychange', ()=>{ if (!document.hidden && state.started) loadAll(); });
+
   sb.auth.onAuthStateChange((event, session)=>{
     if (event==='PASSWORD_RECOVERY') needPassword=true;
-    if (session) start(session); else if (event==='SIGNED_OUT') { started=false; start(null); }
+    if (session) start(session); else if (event==='SIGNED_OUT'){ state.started=false; start(null); }
   });
   sb.auth.getSession().then(({data})=>start(data.session));
 })();
