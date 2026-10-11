@@ -50,6 +50,8 @@ VVE Statenjacht en schrijft meestal Nederlands. Antwoord in het Nederlands, kort
 ## Werkwijze
 - Wijzig lokaal, test met Playwright (Chromium staat klaar; nep-Supabase via route-interceptie), commit, push naar `main`.
 - Commitberichten eindigen met de Co-Authored-By/Claude-Session-regels uit de sessie.
+- Teksten (mededelingen, stemmingen, berichten) ondersteunen eenvoudige opmaak via `paragraphs()`: **vet**, _cursief_,
+  regels met `- ` (opsomming) of `1. ` (genummerd), links automatisch klikbaar. Knoppenbalk `.fmt-bar` boven tekstvakken.
 - Ontwerp: Archivo (koppen) + IBM Plex Sans; kleuren baksteen #7b3526, kozijnoranje #c4672f, lucht #255d9e, rivier #5d7775.
 
 ## Openstaande punten / ideeën
