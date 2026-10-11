@@ -97,17 +97,23 @@ main.page{max-width:900px;padding-top:clamp(28px,5vw,48px)}
 .load-err{max-width:1240px;margin:16px auto 0}
 
 /* ---------- Hero ---------- */
-.hero{height:clamp(300px,52vh,520px)}
-.hero-text{position:absolute;left:0;right:0;bottom:0;z-index:1;padding:0 clamp(16px,4vw,48px) clamp(22px,4vw,40px);color:#fff;max-width:1240px;margin:0 auto}
-.hero-text p{font-size:18px;opacity:.92;margin-bottom:6px}
-.hero-text h1{font-stretch:125%;font-weight:800;font-size:clamp(46px,9vw,124px);letter-spacing:-.015em;line-height:.9}
+/* Overzicht: foto links (blijft staan bij scrollen), inhoud rechts */
+.home{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(28px,4vw,56px);align-items:start;padding-top:clamp(24px,3vw,36px)}
+.hero{position:sticky;top:24px;height:min(calc(100vh - 160px),660px);min-height:420px;border-radius:14px;overflow:hidden;box-shadow:0 18px 40px -28px rgba(20,25,30,.6)}
+.hero-text{position:absolute;left:0;right:0;bottom:0;z-index:1;padding:0 clamp(20px,2.4vw,32px) clamp(20px,2.4vw,30px);color:#fff}
+.hero-text p{font-size:17px;opacity:.92;margin-bottom:4px}
+.hero-text h1{font-stretch:125%;font-weight:800;font-size:clamp(38px,4.4vw,64px);letter-spacing:-.015em;line-height:.95}
+.home-content{display:flex;flex-direction:column;gap:44px;min-width:0}
+.home-content #voteBanner{margin-top:0}
+@media (max-width:900px){
+  .home{grid-template-columns:1fr;gap:28px}
+  .hero{position:relative;top:0;height:190px;min-height:0}
+}
 
 /* ---------- Inhoud ---------- */
 main{max-width:1240px;margin:0 auto;padding:0 clamp(16px,4vw,48px) 64px}
 
 
-.cols{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:clamp(24px,4vw,56px);margin-top:48px}
-@media (max-width:900px){.cols{grid-template-columns:1fr}}
 .col-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-bottom:2px solid var(--ink);padding-bottom:10px;margin-bottom:6px}
 .col-head h2{font-size:26px;font-weight:700}
 
@@ -286,13 +292,12 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
 
   <!-- Overzicht -->
   <div data-panel="overzicht">
-  <header class="photo hero" role="img" aria-label="Het gebouw Statenjacht aan de rivier">
-    <div class="hero-text"><p id="greeting">Welkom</p><h1>Statenjacht</h1></div>
-  </header>
-
-  <main>
-    <div id="voteBanner"></div>
-    <div class="cols">
+  <main class="home">
+    <aside class="photo hero" role="img" aria-label="Het gebouw Statenjacht aan de rivier">
+      <div class="hero-text"><p id="greeting">Welkom</p><h1>Statenjacht</h1></div>
+    </aside>
+    <div class="home-content">
+      <div id="voteBanner"></div>
       <section aria-labelledby="homeNewsTitle">
         <div class="col-head"><h2 id="homeNewsTitle">Laatste mededelingen</h2><a class="see-all" href="#mededelingen">Alle mededelingen</a></div>
         <div id="homeNews"><p class="empty">Laden…</p></div>
