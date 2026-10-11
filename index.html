@@ -169,9 +169,20 @@ dialog h2{font-size:22px}
 @media (max-width:520px){.person{grid-template-columns:48px minmax(0,1fr)}.person .reach{grid-column:2}.contact{grid-template-columns:1fr}.contact .reach{text-align:left}}
 /* Stemmingen */
 .tab-count{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;margin-left:7px;border-radius:10px;background:var(--frame);color:#fff;font-size:12px;font-family:var(--f-body);font-weight:600}
-.vote-banner{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-top:28px;padding:18px 22px;border-radius:12px;background:var(--surface);border-left:5px solid var(--frame);box-shadow:0 10px 30px -22px rgba(20,25,30,.5);text-decoration:none;color:var(--ink)}
+#voteBanner{display:flex;flex-direction:column;gap:12px;margin-top:28px}
+#voteBanner:empty{display:none}
+.vote-banner{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding:18px 22px;border-radius:12px;background:var(--surface);border-left:5px solid var(--frame);box-shadow:0 10px 30px -22px rgba(20,25,30,.5);text-decoration:none;color:var(--ink)}
+.vote-banner.done{border-left-color:var(--sky)}
+.vote-banner.closed{border-left-color:var(--river)}
+.vote-banner > div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.vote-banner .kicker{font-size:13px;font-weight:600;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .vote-banner strong{display:block;font-family:var(--f-display);font-size:19px}
-.vote-banner span{color:var(--muted);font-size:15px}
+.vote-banner .line{color:var(--muted);font-size:15px}
+.vote-banner .line b{color:var(--ink)}
+.vote-banner:hover .btn:not(.primary){border-color:var(--sky);color:var(--sky)}
+.poll.flash{animation:flash 1.6s ease-out}
+@keyframes flash{from{background:var(--sky-soft)}to{background:transparent}}
+.poll{scroll-margin-top:16px}
 .poll{padding:24px 0;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:12px}
 .poll .meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:14px;color:var(--muted)}
 .status{font-size:12px;font-weight:600;border-radius:20px;padding:2px 10px}
@@ -741,7 +752,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
       } else {
         body = `${resultsHTML(p, votes)}<p class="turnout">${turnoutText(p)}</p>`;
       }
-      return `<article class="poll">
+      return `<article class="poll" id="poll-${p.id}">
         <div class="meta">${opn?`<span class="status open">Open</span><span>${untilText(p.sluit)} · ${dateTime(p.sluit)}</span>`:`<span class="status closed">Gesloten</span><span>gesloten op ${dateTime(p.sluit)}</span>`}</div>
         <h3>${esc(p.titel)}</h3>
         ${p.toelichting?`<div class="body">${paragraphs(p.toelichting)}</div>`:''}
@@ -752,7 +763,35 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     // Openstaande stemmingen waar dit appartement nog niet heeft gestemd
     const todo = state.myApp ? open.filter(p=>!myVote(p)) : [];
     $('voteDot').hidden = !todo.length; $('voteDot').textContent = todo.length;
-    $('voteBanner').innerHTML = todo.length ? `<a class="vote-banner" href="#stemmingen"><div><strong>${todo.length===1?esc(todo[0].titel):`Er lopen ${todo.length} stemmingen`}</strong><span>${todo.length===1?`Er loopt een stemming, ${untilText(todo[0].sluit)}.`:'Je appartement heeft nog niet op alles gestemd.'}</span></div><span class="btn primary">Stem nu</span></a>` : '';
+    // Overzicht: alle lopende stemmingen; zijn die er niet, dan de laatst gesloten stemming (tot 30 dagen na sluiting)
+    const recent = closed.filter(p=>new Date() - new Date(p.sluit) < 30*864e5).slice(0,1);
+    $('voteBanner').innerHTML = (open.length ? open : recent).map(pollCardHTML).join('');
+    if (pendingPoll) focusPoll();
+  }
+  function pollCardHTML(p){
+    const opn = isOpen(p), mine = myVote(p), t = turnoutText(p);
+    let cls = '', line, btn;
+    if (opn && !state.myApp){ line = 'Je account is nog niet aan een appartement gekoppeld, daarom kun je nog niet stemmen.'; btn = '<span class="btn">Bekijk stemming</span>'; }
+    else if (opn && !mine){ line = `Appartement ${esc(state.myApp)} heeft nog niet gestemd. ${t}`; btn = '<span class="btn primary">Stem nu</span>'; }
+    else if (opn){ cls = ' done'; line = `Appartement ${esc(state.myApp)} stemde <b>${esc(mine.optie)}</b>. Wijzigen kan tot de sluiting.`; btn = '<span class="btn">Stem wijzigen</span>'; }
+    else {
+      cls = ' closed';
+      const votes = state.votes.filter(v=>v.stemming_id===p.id), counts = p.opties.map(o=>votes.filter(v=>v.optie===o).length), max = Math.max(0,...counts);
+      const winners = p.opties.filter((o,i)=>votes.length && counts[i]===max);
+      line = !votes.length ? 'Er is niet gestemd.' : winners.length===1 ? `Uitslag: <b>${esc(winners[0])}</b> (${max} van ${votes.length} stemmen).` : `Uitslag: gelijke stand tussen ${winners.map(w=>`<b>${esc(w)}</b>`).join(' en ')}.`;
+      btn = '<span class="btn">Bekijk uitslag</span>';
+    }
+    const kicker = opn ? `<span class="status open">Open</span>Stemming · ${untilText(p.sluit)}` : `<span class="status closed">Gesloten</span>Stemming · gesloten op ${dateTime(p.sluit)}`;
+    return `<a class="vote-banner${cls}" href="#stemmingen/${p.id}"><div><span class="kicker">${kicker}</span><strong>${esc(p.titel)}</strong><span class="line">${line}</span></div>${btn}</a>`;
+  }
+  // Direct naar één stemming springen via #stemmingen/<id>
+  let pendingPoll = null;
+  function focusPoll(){
+    const el = pendingPoll && $('poll-'+pendingPoll); if (!el) return false;
+    pendingPoll = null;
+    el.scrollIntoView({block:'start'});
+    el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+    return true;
   }
   $('polls').addEventListener('submit', async e=>{
     const f = e.target.closest('.vote-form'); if (!f) return; e.preventDefault();
@@ -838,8 +877,8 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     });
     fixClamps();
   }
-  const hashTab = () => { const h=location.hash.slice(1); return h.includes('=') ? 'overzicht' : h; };
-  window.addEventListener('hashchange', ()=>{ if (location.hash.includes('=')) return; showTab(hashTab()); window.scrollTo(0,0); });
+  const hashTab = () => { const h=location.hash.slice(1); if (h.includes('=')) return 'overzicht'; const [tab,id]=h.split('/'); pendingPoll = tab==='stemmingen' && /^\d+$/.test(id||'') ? id : null; return tab; };
+  window.addEventListener('hashchange', ()=>{ if (location.hash.includes('=')) return; showTab(hashTab()); if (!focusPoll()) window.scrollTo(0,0); });
   showTab(hashTab());
 
   // Nieuwste gegevens bij terugkeer naar het tabblad
