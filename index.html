@@ -100,23 +100,13 @@ main.page{max-width:900px;padding-top:clamp(28px,5vw,48px)}
 
 /* ---------- Hero ---------- */
 .hero{height:clamp(300px,52vh,520px)}
-.hero-text{position:absolute;left:0;right:0;bottom:0;z-index:1;padding:0 clamp(16px,4vw,48px) calc(clamp(22px,4vw,40px) + 34px);color:#fff;max-width:1240px;margin:0 auto}
+.hero-text{position:absolute;left:0;right:0;bottom:0;z-index:1;padding:0 clamp(16px,4vw,48px) clamp(22px,4vw,40px);color:#fff;max-width:1240px;margin:0 auto}
 .hero-text p{font-size:18px;opacity:.92;margin-bottom:6px}
 .hero-text h1{font-stretch:125%;font-weight:800;font-size:clamp(46px,9vw,124px);letter-spacing:-.015em;line-height:.9}
 
 /* ---------- Inhoud ---------- */
 main{max-width:1240px;margin:0 auto;padding:0 clamp(16px,4vw,48px) 64px}
 
-/* MJOP: de brug tussen foto en inhoud, schuift over de foto heen */
-.mjop{position:relative;z-index:2;margin-top:-34px;background:var(--surface);border-radius:12px;border-top:4px solid var(--frame);box-shadow:0 18px 40px -24px rgba(20,25,30,.45);padding:24px clamp(18px,3vw,32px);display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) auto;gap:28px;align-items:center}
-.mjop h2{font-size:24px;font-weight:700}
-.mjop .sub{color:var(--muted);font-size:15px;margin-top:6px;max-width:42ch}
-.facts{display:grid;grid-template-columns:1fr 1fr;gap:14px 24px}
-.fact b{display:block;font-family:var(--f-display);font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
-.fact span{display:block;font-size:13px;line-height:1.4;color:var(--muted);margin-top:2px}
-.fact b.neg{color:var(--neg)} .fact b.pos{color:var(--pos)}
-.spark{grid-column:1/-1;width:100%;height:56px}
-@media (max-width:900px){.mjop{grid-template-columns:1fr}}
 
 .cols{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:clamp(24px,4vw,56px);margin-top:48px}
 @media (max-width:900px){.cols{grid-template-columns:1fr}}
@@ -250,19 +240,6 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
   </header>
 
   <main>
-    <section class="mjop" aria-labelledby="mjopTitle">
-      <div>
-        <h2 id="mjopTitle">Meerjarenonderhoudsplan</h2>
-        <p class="sub">Wat er de komende jaren aan het gebouw moet gebeuren, wat het kost en hoe de reserve zich ontwikkelt.</p>
-      </div>
-      <div class="facts" id="facts">
-        <div class="fact"><b>…</b><span>Saldo reservefonds</span></div>
-        <div class="fact"><b>…</b><span>Grootste uitgave</span></div>
-        <svg class="spark" id="spark" viewBox="0 0 400 56" preserveAspectRatio="none" aria-hidden="true"></svg>
-      </div>
-      <a class="btn primary" href="/mjop.html">MJOP Planner openen</a>
-    </section>
-
     <div class="cols">
       <section aria-labelledby="homeNewsTitle">
         <div class="col-head"><h2 id="homeNewsTitle">Laatste mededelingen</h2><a class="see-all" href="#mededelingen">Alle mededelingen</a></div>
@@ -441,48 +418,15 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
   }
   async function loadAll(){
     const today = new Date(); today.setHours(0,0,0,0);
-    const [p,o,n,a,c] = await Promise.all([
-      sb.from('plan').select('*').eq('id',1).maybeSingle(),
-      sb.from('onderdelen').select('bedrag,cyclus,eerste,jaren'),
+    const [n,a,c] = await Promise.all([
       sb.from('mededelingen').select('*').order('vastgepind',{ascending:false}).order('geplaatst',{ascending:false}).limit(50),
       sb.from('agenda').select('*').gte('start', today.toISOString()).order('start',{ascending:true}).limit(40),
       sb.from('contacten').select('*').order('volgorde',{ascending:true}).order('naam',{ascending:true})
     ]);
-    $('loadErr').hidden = !(p.error || o.error || n.error || a.error || c.error);
+    $('loadErr').hidden = !(n.error || a.error || c.error);
     state.contacts = c.data || []; renderContacts();
-    if (p.data && o.data) renderMjop(p.data, o.data);
     state.news = n.data || []; state.events = a.data || [];
     renderNews(); renderAgenda();
-  }
-
-  // ---------- MJOP-samenvatting (zelfde rekenregels als de planner) ----------
-  function renderMjop(plan, items){
-    const start=plan.startjaar, n=plan.looptijd, idx=Number(plan.indexatie)||0, res=plan.reserveringen||{};
-    const f = y => Math.pow(1+idx/100, y-start);
-    const amount = (it,y) => {
-      if (it.jaren) return (Number(it.jaren[y])||0)*f(y);
-      const c=Math.max(0,Math.round(Number(it.cyclus)||0)), first=Math.round(it.eerste||start);
-      if (y<first || (c===0 ? y!==first : (y-first)%c!==0)) return 0;
-      return (Number(it.bedrag)||0)*f(y);
-    };
-    const resFor = y => (res[y]!==undefined && res[y]!==null && res[y]!=='') ? Number(res[y])||0 : Math.round((Number(plan.reservering)||0)*f(y));
-    const ys = Array.from({length:n},(_,i)=>start+i);
-    let s = Number(plan.beginsaldo)||0;
-    const tot = ys.map(y=>items.reduce((t,it)=>t+amount(it,y),0));
-    const sal = ys.map((y,i)=> s += resFor(y)-tot[i]);
-    const thisYear = new Date().getFullYear(), iNow = Math.max(0, ys.indexOf(thisYear));
-    let iMax = 0; tot.forEach((v,i)=>{ if(v>tot[iMax]) iMax=i; });
-    const iNeg = sal.findIndex(v=>v<0);
-    $('facts').innerHTML = `
-      <div class="fact"><b class="${sal[iNow]<0?'neg':''}">${eur.format(sal[iNow]??0)}</b><span>Saldo reservefonds eind ${ys[iNow]}</span></div>
-      <div class="fact"><b>${eur.format(tot[iMax]||0)}</b><span>Grootste uitgave, in ${ys[iMax]}</span></div>
-      <div class="fact" style="grid-column:1/-1"><span>${iNeg>=0 ? `Volgens de huidige planning ontstaat in <strong>${ys[iNeg]}</strong> een tekort.` : 'Volgens de huidige planning blijft het saldo positief tot en met ' + ys[ys.length-1] + '.'}</span></div>
-      <svg class="spark" id="spark" viewBox="0 0 400 56" preserveAspectRatio="none" aria-hidden="true"></svg>`;
-    // Klein lijntje van het saldo over de hele looptijd, met de nullijn
-    const W=400,H=56,P=4, max=Math.max(...sal,0), min=Math.min(...sal,0), sy=v=>P+(H-2*P)*(max-v)/((max-min)||1);
-    const pts = sal.map((v,i)=>`${(i/(sal.length-1||1))*W},${sy(v)}`).join(' ');
-    $('spark').innerHTML = `<line x1="0" x2="${W}" y1="${sy(0)}" y2="${sy(0)}" stroke="var(--line)" stroke-width="1"/>
-      <polyline points="${pts}" fill="none" stroke="var(--sky)" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>`;
   }
 
   // ---------- Mededelingen ----------
