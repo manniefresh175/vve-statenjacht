@@ -239,6 +239,12 @@ dialog h2{font-size:22px}
 .doc .acts{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
 @media (max-width:640px){.doc{grid-template-columns:44px minmax(0,1fr)}.doc .acts{grid-column:2;justify-content:flex-start}}
 .upl-file{padding:12px;border:1px dashed var(--line);border-radius:8px;background:var(--paper)}
+/* Groepen ordenen */
+.grp-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.grp-list li{display:flex;align-items:center;gap:8px;padding:8px 8px 8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--paper);font-weight:600}
+.grp-list li span{flex:1}
+.grp-list .btn{width:38px;justify-content:center;padding:0}
+.grp-list .btn:disabled{opacity:.35;cursor:default}
 /* Bewoners */
 .res-table{width:100%;border-collapse:collapse;font-size:15px}
 .res-table th{text-align:left;font-size:13px;color:var(--muted);font-weight:600;padding:12px 8px 8px;border-bottom:1px solid var(--line)}
@@ -386,7 +392,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
 
   <!-- Bestuur en commissies -->
   <main class="page" data-panel="bestuur" hidden>
-    <div class="page-head"><div><h1>Bestuur en commissies</h1><p>Wie zit er in het bestuur en de commissies, en hoe bereik je ze.</p></div><button class="btn small" id="addPerson" hidden>Persoon toevoegen</button></div>
+    <div class="page-head"><div><h1>Bestuur en commissies</h1><p>Wie zit er in het bestuur en de commissies, en hoe bereik je ze.</p></div><div class="admin-row"><button class="btn small quiet" id="orderGroups" hidden>Groepen ordenen</button><button class="btn small" id="addPerson" hidden>Persoon toevoegen</button></div></div>
     <div id="board"><p class="empty">Laden…</p></div>
   </main>
 
@@ -446,6 +452,19 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
   </form>
 </dialog>
 
+<!-- Groepen ordenen -->
+<dialog id="grpDlg">
+  <form id="grpForm" method="dialog">
+    <h2>Groepen ordenen</h2>
+    <p class="small-print">Zet de groepen in de volgorde waarin ze op de pagina moeten staan.</p>
+    <ol class="grp-list" id="grpList"></ol>
+    <p class="msg err" id="grpErr" hidden></p>
+    <div class="dlg-actions"><span></span>
+      <div class="right"><button type="button" class="btn" id="grpCancel">Annuleren</button><button type="submit" class="btn primary" id="grpSave">Opslaan</button></div>
+    </div>
+  </form>
+</dialog>
+
 <!-- Stemming aanmaken / wijzigen -->
 <dialog id="pollDlg">
   <form id="pollForm" method="dialog">
@@ -492,7 +511,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const eur = new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',maximumFractionDigits:0});
-  const state = { isAdmin:false, naam:'', news:[], events:[], contacts:[], polls:[], votes:[], turnout:{}, residents:[], docs:[], feedback:[], fbFilter:'open', myApp:null, started:false };
+  const state = { isAdmin:false, naam:'', news:[], events:[], contacts:[], polls:[], votes:[], turnout:{}, residents:[], docs:[], groupOrder:[], feedback:[], fbFilter:'open', myApp:null, started:false };
 
   // ---------- Supabase ----------
   const SUPABASE_URL = 'https://tnqjubjtsdwulwjbbhfp.supabase.co';
@@ -561,13 +580,13 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     state.isAdmin = prof?.rol === 'admin';
     $('role').textContent = state.isAdmin ? 'Beheerder' : 'Bewoner';
     state.myApp = (prof?.appartement||'').trim() || null;
-    $('addNews').hidden = $('addEvent').hidden = $('addPerson').hidden = $('addPoll').hidden = $('addDoc').hidden = $('tabBewoners').hidden = !state.isAdmin;
+    $('addNews').hidden = $('addEvent').hidden = $('addPerson').hidden = $('addPoll').hidden = $('addDoc').hidden = $('orderGroups').hidden = $('tabBewoners').hidden = !state.isAdmin;
     showTab(hashTab());
     loadAll();
   }
   async function loadAll(){
     const today = new Date(); today.setHours(0,0,0,0);
-    const [n,a,c,ps,vs,to,rs,fb,dc] = await Promise.all([
+    const [n,a,c,ps,vs,to,rs,fb,dc,gr] = await Promise.all([
       sb.from('mededelingen').select('*').order('vastgepind',{ascending:false}).order('geplaatst',{ascending:false}).limit(50),
       sb.from('agenda').select('*').gte('start', today.toISOString()).order('start',{ascending:true}).limit(40),
       sb.from('contacten').select('*').order('volgorde',{ascending:true}).order('naam',{ascending:true}),
@@ -576,7 +595,8 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
       sb.rpc('stem_opkomst'),
       state.isAdmin ? sb.from('profiles').select('id,email,naam,appartement,rol') : Promise.resolve({data:[]}),
       sb.from('feedback').select('*').order('gemaakt',{ascending:false}).limit(300),
-      sb.from('documenten').select('*').order('geplaatst',{ascending:false})
+      sb.from('documenten').select('*').order('geplaatst',{ascending:false}),
+      sb.from('contact_groepen').select('*').order('volgorde',{ascending:true})
     ]);
     $('loadErr').hidden = !(n.error || a.error || c.error || ps.error || vs.error);
     state.polls = ps.data || []; state.votes = vs.data || [];
@@ -585,6 +605,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     state.feedback = fb.data || []; renderFeedback();
     state.docs = dc.data || []; renderDocs();
     renderPolls(); if (state.isAdmin) renderResidents();
+    state.groupOrder = (gr.data||[]).map(g=>g.naam);
     state.contacts = c.data || []; renderContacts();
     state.news = n.data || []; state.events = a.data || [];
     renderNews(); renderAgenda();
@@ -645,9 +666,18 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
   const editBtn = c => state.isAdmin ? `<div class="admin-row"><button class="btn quiet small" data-edit-contact="${c.id}">Wijzigen</button></div>` : '';
   const COMMISSIES = ['Femur','Technische commissie','Kascommissie','Overige'];
   const commName = c => (c.commissie||'').trim() || 'Technische commissie';
+  // Groepen in de volgorde uit de tabel contact_groepen (instelbaar via 'Groepen ordenen')
+  function groupNames(){
+    const all = ['Bestuur', ...COMMISSIES], pos = n => { const i = state.groupOrder.indexOf(n); return i<0 ? 999 + all.indexOf(n) : i; };
+    return all.slice().sort((a,b)=>pos(a)-pos(b));
+  }
+  const groupValue = n => n==='Bestuur' ? 'bestuur' : 'tc:'+n;
   function renderContacts(){
-    // Vaste volgorde: Bestuur, Femur, Technische commissie, Kascommissie, Overige
-    const groups = [['bestuur','Bestuur', c=>c.groep==='bestuur'], ...COMMISSIES.map(n=>['tc', n, c=>c.groep==='tc' && commName(c)===n])];
+    const names = groupNames();
+    const cur = $('cGroep').value;
+    $('cGroep').innerHTML = names.map(n=>`<option value="${esc(groupValue(n))}">${esc(n)}</option>`).join('');
+    if (cur) $('cGroep').value = cur;
+    const groups = names.map(n => n==='Bestuur' ? ['bestuur','Bestuur', c=>c.groep==='bestuur'] : ['tc', n, c=>c.groep==='tc' && commName(c)===n]);
     $('board').innerHTML = groups.map(([g,label,match])=>{
       const list = state.contacts.filter(match);
       return `<div class="people-group ${g}"><h3>${label}</h3>${!list.length ? `<p class="empty small">Nog niemand toegevoegd.</p>` : '<div class="people-list">' + list.map(c=>`
@@ -656,6 +686,28 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
           ${reach(c)}</div>`).join('') + '</div>'}</div>`;
     }).join('');
   }
+
+  // Groepen ordenen
+  let grpWork=[];
+  function drawGrp(){
+    $('grpList').innerHTML = grpWork.map((n,i)=>`<li><span>${esc(n)}</span>
+      <button type="button" class="btn small" data-mv="${i}" data-d="-1" aria-label="${esc(n)} omhoog" ${i===0?'disabled':''}>↑</button>
+      <button type="button" class="btn small" data-mv="${i}" data-d="1" aria-label="${esc(n)} omlaag" ${i===grpWork.length-1?'disabled':''}>↓</button></li>`).join('');
+  }
+  $('orderGroups').onclick = ()=>{ grpWork = groupNames(); $('grpErr').hidden=true; $('grpSave').disabled=false; drawGrp(); $('grpDlg').showModal(); };
+  $('grpCancel').onclick = ()=>$('grpDlg').close();
+  $('grpList').addEventListener('click', e=>{
+    const b=e.target.closest('[data-mv]'); if (!b) return;
+    const i=Number(b.dataset.mv), j=i+Number(b.dataset.d);
+    [grpWork[i],grpWork[j]]=[grpWork[j],grpWork[i]]; drawGrp();
+    const again=$('grpList').querySelector(`[data-mv="${j}"][data-d="${b.dataset.d}"]`) || $('grpList').querySelector(`[data-mv="${j}"]`); if (again && !again.disabled) again.focus();
+  });
+  $('grpForm').addEventListener('submit', async e=>{
+    e.preventDefault(); $('grpSave').disabled=true;
+    const { error } = await sb.from('contact_groepen').upsert(grpWork.map((naam,i)=>({ naam, volgorde:i+1 })));
+    if (error){ $('grpErr').hidden=false; $('grpErr').textContent='Opslaan lukte niet. Probeer het opnieuw.'; $('grpSave').disabled=false; return; }
+    $('grpDlg').close(); loadAll();
+  });
 
   let editingContact=null, delArmedC=false;
   function syncContactLabels(){

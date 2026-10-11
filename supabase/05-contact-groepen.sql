@@ -1,0 +1,4 @@
+-- Volgorde van de groepen op 'Bestuur en commissies' (uitgevoerd op 11 oktober 2026 als migratie 'contact_groepen'; ter documentatie)
+-- Tabel public.contact_groepen (naam pk, volgorde int). Namen: 'Bestuur' (= contacten.groep 'bestuur')
+-- en de commissienamen (= contacten.commissie bij groep 'tc'). Lezen: ingelogd; schrijven: is_admin().
+-- De lijst met mogelijke groepen staat in index.html (COMMISSIES); de tabel bepaalt alleen de volgorde.
