@@ -27,13 +27,13 @@ VVE Statenjacht en schrijft meestal Nederlands. Antwoord in het Nederlands, kort
 ## Bestanden
 - `index.html` – inlogscherm + portaal met tabbladen (hash-routing):
   `#overzicht` (foto bovenaan, sectie Lopende stemming alleen als er iets open is, laatste mededelingen, binnenkort),
-  `#mededelingen`, `#agenda`, `#stemmingen`, `#bestuur` (Bestuur / Technische commissie / Kascommissie / Overige),
+  `#mededelingen`, `#agenda`, `#stemmingen`, `#documenten` (beheerder uploadt, ingelogden openen), `#bestuur` (Bestuur / Technische commissie / Kascommissie / Overige),
   `#contact` (bewoners sturen bericht aan bestuur, alleen tekst; beheerder ziet alles, zet status en antwoordt;
   tabel `feedback`). Het tabblad Contactpersonen is op 11-10-2026 verwijderd.
   `#bewoners` (alleen beheerder), en de tab MJOP → `mjop.html`.
 - `mjop.html` – MJOP (Overzicht, Planning, Kapitalisatie, Instellingen, Historie) met dezelfde kopbalk/tabs.
 - `assets/statenjacht.jpg` (2000px) en `assets/statenjacht-900.jpg`.
-- `supabase/01-schema.sql`, `02-stemmingen.sql`, `03-feedback.sql` – documentatie van het schema.
+- `supabase/01-schema.sql`, `02-stemmingen.sql`, `03-feedback.sql`, `04-documenten.sql` – documentatie van het schema.
 
 ## Database (public)
 - `profiles` (id, email, naam, rol 'admin'|'lezer', appartement). Nieuwe gebruiker krijgt automatisch rol 'lezer'.
@@ -43,6 +43,7 @@ VVE Statenjacht en schrijft meestal Nederlands. Antwoord in het Nederlands, kort
   Eén stem per appartement, openbaar na sluiting (RLS), stemmen alleen via RPC `stem()`; opkomst via `stem_opkomst()`.
 - `feedback` (bericht, onderwerp ongebruikt/default 'Overig', status nieuw/in behandeling/afgehandeld, antwoord); afzender via trigger uit profiel.
   Bewoner ziet alleen eigen berichten; beheerder alles. Geen e-mailmelding (nog niet gebouwd).
+- `documenten` + privé Storage-bucket `documenten` (max 20 MB/bestand; gratis plan: 1 GB opslag totaal).
 - RLS: ingelogd mag lezen; schrijven alleen als `is_admin()`. Security-definer functies zijn bewust aanroepbaar.
 
 ## Werkwijze

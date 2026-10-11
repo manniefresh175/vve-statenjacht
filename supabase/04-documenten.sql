@@ -1,0 +1,5 @@
+-- Documenten (al uitgevoerd in Supabase op 11 oktober 2026 als migratie 'documenten'; alleen ter documentatie)
+-- Storage-bucket 'documenten': privé, max 20 MB per bestand. Lezen: ingelogd. Uploaden/wijzigen/verwijderen: is_admin().
+-- Tabel public.documenten: id, geplaatst, titel, toelichting, pad (pad in bucket), bestandsnaam, grootte, type, door_naam.
+-- RLS: ingelogd mag lezen; toevoegen/wijzigen/verwijderen alleen is_admin().
+-- De site opent een document via een tijdelijke link (createSignedUrl, 5 minuten geldig).

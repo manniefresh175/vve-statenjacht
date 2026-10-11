@@ -229,6 +229,16 @@ dialog h2{font-size:22px}
 .fb-admin{display:flex;flex-direction:column;gap:10px;max-width:820px;margin-top:4px}
 .fb-admin textarea{min-height:80px}
 .fb-admin .vote-row select{width:auto}
+/* Documenten */
+.doc{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:14px;align-items:center;padding:16px 0;border-bottom:1px solid var(--line)}
+.doc .ico{width:44px;height:52px;border-radius:6px;background:var(--surface);border:1px solid var(--line);display:grid;place-items:end center;padding-bottom:7px;font-size:10px;font-weight:700;letter-spacing:.04em;color:var(--brick);position:relative;overflow:hidden}
+.doc .ico::before{content:"";position:absolute;top:0;left:0;right:0;height:6px;background:var(--brick)}
+.doc .nm{font-weight:600;font-size:17px;background:none;border:0;padding:0;color:var(--ink);text-align:left;cursor:pointer}
+.doc .nm:hover{color:var(--sky);text-decoration:underline}
+.doc .fn{font-size:14px;color:var(--muted)}
+.doc .acts{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:640px){.doc{grid-template-columns:44px minmax(0,1fr)}.doc .acts{grid-column:2;justify-content:flex-start}}
+.upl-file{padding:12px;border:1px dashed var(--line);border-radius:8px;background:var(--paper)}
 /* Bewoners */
 .res-table{width:100%;border-collapse:collapse;font-size:15px}
 .res-table th{text-align:left;font-size:13px;color:var(--muted);font-weight:600;padding:12px 8px 8px;border-bottom:1px solid var(--line)}
@@ -296,6 +306,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     <a href="#mededelingen" data-tab="mededelingen">Mededelingen</a>
     <a href="#agenda" data-tab="agenda">Agenda</a>
     <a href="#stemmingen" data-tab="stemmingen">Stemmingen<span class="tab-count" id="voteDot" hidden></span></a>
+    <a href="#documenten" data-tab="documenten">Documenten</a>
     <a href="#bestuur" data-tab="bestuur">Bestuur en commissies</a>
     <a href="#bewoners" data-tab="bewoners" id="tabBewoners" hidden>Bewoners</a>
     <a href="/mjop.html">MJOP</a>
@@ -367,6 +378,12 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     <div id="residents"><p class="empty">Laden…</p></div>
   </main>
 
+  <!-- Documenten -->
+  <main class="page" data-panel="documenten" hidden>
+    <div class="page-head"><div><h1>Documenten</h1><p>Notulen, reglementen, jaarstukken en andere stukken van de VvE.</p></div><button class="btn small" id="addDoc" hidden>Document plaatsen</button></div>
+    <div id="docs"><p class="empty">Laden…</p></div>
+  </main>
+
   <!-- Bestuur en commissies -->
   <main class="page" data-panel="bestuur" hidden>
     <div class="page-head"><div><h1>Bestuur en commissies</h1><p>Wie zit er in het bestuur en de commissies, en hoe bereik je ze.</p></div><button class="btn small" id="addPerson" hidden>Persoon toevoegen</button></div>
@@ -410,6 +427,21 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     <div class="dlg-actions">
       <button type="button" class="btn danger" id="eventDel" hidden>Verwijderen</button>
       <div class="right"><button type="button" class="btn" id="eventCancel">Annuleren</button><button type="submit" class="btn primary" id="eventSave">Opslaan</button></div>
+    </div>
+  </form>
+</dialog>
+
+<!-- Document plaatsen / wijzigen -->
+<dialog id="docDlg">
+  <form id="docForm" method="dialog">
+    <h2 id="docDlgTitle">Document plaatsen</h2>
+    <div class="field" id="docFileField"><label for="dFile">Bestand (max. 20 MB)</label><input id="dFile" type="file" class="upl-file"></div>
+    <div class="field"><label for="dTitel">Titel</label><input id="dTitel" required maxlength="200" placeholder="Bijvoorbeeld: Notulen ALV 2026"></div>
+    <div class="field"><label for="dOms">Toelichting (optioneel)</label><input id="dOms" maxlength="1000"></div>
+    <p class="msg err" id="docErr" hidden></p>
+    <div class="dlg-actions">
+      <button type="button" class="btn danger" id="docDel" hidden>Verwijderen</button>
+      <div class="right"><button type="button" class="btn" id="docCancel">Annuleren</button><button type="submit" class="btn primary" id="docSave">Plaatsen</button></div>
     </div>
   </form>
 </dialog>
@@ -460,7 +492,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const eur = new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',maximumFractionDigits:0});
-  const state = { isAdmin:false, naam:'', news:[], events:[], contacts:[], polls:[], votes:[], turnout:{}, residents:[], feedback:[], fbFilter:'open', myApp:null, started:false };
+  const state = { isAdmin:false, naam:'', news:[], events:[], contacts:[], polls:[], votes:[], turnout:{}, residents:[], docs:[], feedback:[], fbFilter:'open', myApp:null, started:false };
 
   // ---------- Supabase ----------
   const SUPABASE_URL = 'https://tnqjubjtsdwulwjbbhfp.supabase.co';
@@ -529,13 +561,13 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
     state.isAdmin = prof?.rol === 'admin';
     $('role').textContent = state.isAdmin ? 'Beheerder' : 'Bewoner';
     state.myApp = (prof?.appartement||'').trim() || null;
-    $('addNews').hidden = $('addEvent').hidden = $('addPerson').hidden = $('addPoll').hidden = $('tabBewoners').hidden = !state.isAdmin;
+    $('addNews').hidden = $('addEvent').hidden = $('addPerson').hidden = $('addPoll').hidden = $('addDoc').hidden = $('tabBewoners').hidden = !state.isAdmin;
     showTab(hashTab());
     loadAll();
   }
   async function loadAll(){
     const today = new Date(); today.setHours(0,0,0,0);
-    const [n,a,c,ps,vs,to,rs,fb] = await Promise.all([
+    const [n,a,c,ps,vs,to,rs,fb,dc] = await Promise.all([
       sb.from('mededelingen').select('*').order('vastgepind',{ascending:false}).order('geplaatst',{ascending:false}).limit(50),
       sb.from('agenda').select('*').gte('start', today.toISOString()).order('start',{ascending:true}).limit(40),
       sb.from('contacten').select('*').order('volgorde',{ascending:true}).order('naam',{ascending:true}),
@@ -543,13 +575,15 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
       sb.from('stemmen').select('*'),
       sb.rpc('stem_opkomst'),
       state.isAdmin ? sb.from('profiles').select('id,email,naam,appartement,rol') : Promise.resolve({data:[]}),
-      sb.from('feedback').select('*').order('gemaakt',{ascending:false}).limit(300)
+      sb.from('feedback').select('*').order('gemaakt',{ascending:false}).limit(300),
+      sb.from('documenten').select('*').order('geplaatst',{ascending:false})
     ]);
     $('loadErr').hidden = !(n.error || a.error || c.error || ps.error || vs.error);
     state.polls = ps.data || []; state.votes = vs.data || [];
     state.turnout = Object.fromEntries((to.data||[]).map(r=>[r.stemming_id, r]));
     state.residents = rs.data || [];
     state.feedback = fb.data || []; renderFeedback();
+    state.docs = dc.data || []; renderDocs();
     renderPolls(); if (state.isAdmin) renderResidents();
     state.contacts = c.data || []; renderContacts();
     state.news = n.data || []; state.events = a.data || [];
@@ -884,6 +918,73 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
       if (session && tr.dataset.res===session.user.id){ state.myApp = row.appartement; renderPolls(); } }
   });
 
+  // ---------- Documenten ----------
+  const fileSize = b => !b ? '' : b < 1024*1024 ? Math.max(1,Math.round(b/1024))+' kB' : (b/1024/1024).toFixed(1).replace('.',',')+' MB';
+  const fileExt = n => ((String(n).match(/\.([a-z0-9]{1,5})$/i)||[])[1]||'BEST').toUpperCase();
+  function renderDocs(){
+    $('docs').innerHTML = !state.docs.length ? `<p class="empty">Er zijn nog geen documenten.${state.isAdmin?' Plaats er een met de knop hierboven.':''}</p>` :
+      state.docs.map(d=>`<div class="doc">
+        <div class="ico" aria-hidden="true">${esc(fileExt(d.bestandsnaam))}</div>
+        <div><button type="button" class="nm" data-open-doc="${d.id}">${esc(d.titel)}</button>
+          ${d.toelichting?`<div class="fn">${esc(d.toelichting)}</div>`:''}
+          <div class="fn">${dateLong(d.geplaatst)} · ${esc(fileExt(d.bestandsnaam))}${d.grootte?' · '+fileSize(d.grootte):''}</div></div>
+        <div class="acts"><button type="button" class="btn small" data-open-doc="${d.id}">Openen</button>${state.isAdmin?`<button type="button" class="btn quiet small" data-edit-doc="${d.id}">Wijzigen</button>`:''}</div>
+      </div>`).join('');
+  }
+  $('docs').addEventListener('click', async e=>{
+    const o=e.target.closest('[data-open-doc]'), ed=e.target.closest('[data-edit-doc]');
+    if (ed) return openDoc(state.docs.find(d=>String(d.id)===ed.dataset.editDoc));
+    if (!o) return;
+    const d=state.docs.find(x=>String(x.id)===o.dataset.openDoc); if (!d) return;
+    const w = window.open('', '_blank');   // direct openen, anders blokkeert de browser het venster
+    const { data, error } = await sb.storage.from('documenten').createSignedUrl(d.pad, 300);
+    if (error || !data?.signedUrl){ if (w) w.close(); alert('Het document kon niet worden geopend. Probeer het opnieuw.'); return; }
+    if (w) w.location = data.signedUrl; else location.href = data.signedUrl;
+  });
+  let editingDoc=null, delArmedD=false;
+  function openDoc(d){
+    editingDoc=d||null; delArmedD=false;
+    $('docDlgTitle').textContent = d ? 'Document wijzigen' : 'Document plaatsen';
+    $('docFileField').hidden = !!d; $('dFile').value=''; $('dFile').required = !d;
+    $('dTitel').value = d?.titel||''; $('dOms').value = d?.toelichting||'';
+    $('docSave').textContent = d ? 'Opslaan' : 'Plaatsen'; $('docSave').disabled=false;
+    $('docDel').hidden=!d; $('docDel').textContent='Verwijderen'; $('docErr').hidden=true;
+    $('docDlg').showModal(); (d ? $('dTitel') : $('dFile')).focus();
+  }
+  $('addDoc').onclick = ()=>openDoc(null);
+  $('docCancel').onclick = ()=>$('docDlg').close();
+  $('dFile').onchange = ()=>{ const f=$('dFile').files[0]; if (f && !$('dTitel').value.trim()) $('dTitel').value = f.name.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').trim(); };
+  $('docForm').addEventListener('submit', async e=>{
+    e.preventDefault();
+    const err=$('docErr'), btn=$('docSave'), titel=$('dTitel').value.trim(), oms=$('dOms').value.trim()||null;
+    const fail = t => { err.hidden=false; err.textContent=t; btn.disabled=false; };
+    err.hidden=true; btn.disabled=true;
+    if (editingDoc){
+      const { error } = await sb.from('documenten').update({ titel, toelichting:oms }).eq('id', editingDoc.id);
+      if (error) return fail('Opslaan lukte niet. Probeer het opnieuw.');
+    } else {
+      const f=$('dFile').files[0];
+      if (!f) return fail('Kies eerst een bestand.');
+      if (f.size > 20*1024*1024) return fail('Dit bestand is groter dan 20 MB.');
+      const safe = f.name.normalize('NFKD').replace(/[^\w.\-]+/g,'_').replace(/_+/g,'_').slice(-120);
+      const pad = `${Date.now()}-${Math.random().toString(36).slice(2,8)}/${safe}`;
+      btn.textContent='Bezig met uploaden…';
+      const up = await sb.storage.from('documenten').upload(pad, f, { contentType: f.type || 'application/octet-stream' });
+      btn.textContent='Plaatsen';
+      if (up.error) return fail('Uploaden lukte niet. Controleer je verbinding en probeer het opnieuw.');
+      const { error } = await sb.from('documenten').insert({ titel, toelichting:oms, pad, bestandsnaam:f.name, grootte:f.size, type:f.type||null, door_naam:'Bestuur VVE Statenjacht' });
+      if (error){ await sb.storage.from('documenten').remove([pad]); return fail('Opslaan lukte niet. Probeer het opnieuw.'); }
+    }
+    $('docDlg').close(); loadAll();
+  });
+  $('docDel').onclick = async ()=>{
+    if (!delArmedD){ delArmedD=true; $('docDel').textContent='Klik nogmaals: document definitief verwijderen'; return; }
+    const { error } = await sb.from('documenten').delete().eq('id', editingDoc.id);
+    if (error){ $('docErr').hidden=false; $('docErr').textContent='Verwijderen lukte niet.'; return; }
+    await sb.storage.from('documenten').remove([editingDoc.pad]);
+    $('docDlg').close(); loadAll();
+  };
+
   // ---------- Feedback ----------
   const FB_STATUS = { 'nieuw':['nieuw','Nieuw'], 'in behandeling':['behandeling','In behandeling'], 'afgehandeld':['klaar','Afgehandeld'] };
   function renderFeedback(){
@@ -949,7 +1050,7 @@ footer{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;col
   });
 
   // ---------- Tabbladen ----------
-  const TABS = ['overzicht','mededelingen','agenda','stemmingen','bestuur','contact','bewoners'];
+  const TABS = ['overzicht','mededelingen','agenda','stemmingen','documenten','bestuur','contact','bewoners'];
   function showTab(name){
     if (!TABS.includes(name) || (name==='bewoners' && !state.isAdmin)) name='overzicht';
     document.querySelectorAll('[data-panel]').forEach(p=>{ p.hidden = p.dataset.panel!==name; });
